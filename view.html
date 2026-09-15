@@ -37,9 +37,16 @@
     .slip-title { font-size: 22px; font-weight: 800; margin: 0; color: #111; }
     .slip-subtitle { font-size: 13px; color: #888; margin-top: 4px; }
 
-    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
+    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
     .info-table th { width: 25%; background: #fafafa; padding: 9px 10px; text-align: left; color: #666; border: 1px solid #eee; }
     .info-table td { width: 25%; padding: 9px 10px; border: 1px solid #eee; font-weight: 600; color: #222; }
+
+    /* 차수별 수강인원 박스 */
+    .counts-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 14px; margin-bottom: 20px; font-size: 13px; }
+    .counts-header { font-weight: bold; color: #1f2937; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .counts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; }
+    .count-chip { background: #fff; border: 1px solid #d1d5db; padding: 5px 8px; border-radius: 4px; text-align: center; font-size: 12px; }
+    .count-chip strong { color: #1890ff; font-size: 13px; }
 
     .money-section-title { font-size: 14px; font-weight: bold; color: #1f1f1f; margin-bottom: 8px; }
     .calc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
@@ -114,6 +121,15 @@
       </tr>
     </table>
 
+    <!-- 방과후프로그램 전용: 차수별 수강인원 상세 현황 -->
+    <div id="boxCounts" class="counts-box" style="display:none;">
+      <div class="counts-header">
+        <span>■ 차수별 수강인원 현황</span>
+        <span id="totalStudentsBadge" style="font-size:12px; color:#1890ff; font-weight:normal;"></span>
+      </div>
+      <div class="counts-grid" id="countsGrid"></div>
+    </div>
+
     <div class="money-section-title">■ 정산 및 공제 상세 내역</div>
     <table class="calc-table">
       <thead>
@@ -129,7 +145,6 @@
           <td class="col-title">사업소득세 (3%)</td>
           <td class="col-val" id="valIncomeTax">0원</td>
         </tr>
-        <!-- 코디/안전관리자일 경우 아래 재료비 행 숨김 -->
         <tr id="rowMaterial">
           <td class="col-title">재료비 지원금</td>
           <td class="col-val" id="valMaterial">0원</td>
@@ -215,7 +230,6 @@
   function renderSlip(d) {
     const rawCat = d.category || '방과후';
     
-    // 1. 구분 명칭 정리
     let fullCategoryName = rawCat;
     if (rawCat === '방과후') fullCategoryName = '방과후프로그램';
     else if (rawCat === '맞춤형') fullCategoryName = '맞춤형프로그램';
@@ -226,13 +240,11 @@
 
     document.getElementById('subTitleMonth').innerText = `${d.month || ''} 귀속 정산`;
 
-    // 2. 기본 정보
     document.getElementById('infoSchool').innerText = d.school || '-';
     document.getElementById('infoName').innerText = d.name || '-';
     document.getElementById('infoCategory').innerText = fullCategoryName;
     document.getElementById('infoSubject').innerText = d.subject || '-';
 
-    // 3. 코디 / 안전관리자 판단
     const isFixedStaff = (rawCat === '코디' || rawCat === '안전관리자' || d.subject === '코디' || d.subject === '안전관리자');
 
     // 수업차시 행 처리
@@ -244,14 +256,54 @@
       document.getElementById('infoLessons').innerText = (d.lessons || 0) + '차시';
     }
 
-    // 재료비 행 처리 (코디/안전관리자일 때 재료비 행 숨김)
+    // 차수별 수강인원 현황 처리 (방과후프로그램만 표시)
+    const boxCounts = document.getElementById('boxCounts');
+    const countsGrid = document.getElementById('countsGrid');
+    countsGrid.innerHTML = '';
+
+    if (rawCat === '방과후' && d.counts && Object.keys(d.counts).length > 0) {
+      let totalStudents = 0;
+      let countChips = [];
+
+      // w1~w4 (4회), e1~e8 (8회), c1~c12 (12회) 파싱 및 내림차순 정렬
+      const keys = Object.keys(d.counts).sort((a, b) => {
+        const numA = parseInt(a.replace(/[^0-9]/g, ''), 10);
+        const numB = parseInt(b.replace(/[^0-9]/g, ''), 10);
+        return numB - numA;
+      });
+
+      keys.forEach(k => {
+        const count = Number(d.counts[k]) || 0;
+        if (count > 0) {
+          totalStudents += count;
+          const num = k.replace(/[^0-9]/g, '');
+          countChips.push(`
+            <div class="count-chip">
+              ${num}회: <strong>${count}</strong>명
+            </div>
+          `);
+        }
+      });
+
+      if (countChips.length > 0) {
+        boxCounts.style.display = 'block';
+        countsGrid.innerHTML = countChips.join('');
+        document.getElementById('totalStudentsBadge').innerText = `총 수강인원 ${totalStudents}명`;
+      } else {
+        boxCounts.style.display = 'none';
+      }
+    } else {
+      boxCounts.style.display = 'none';
+    }
+
+    // 재료비 행 처리 (코디/안전관리자 숨김)
     const rowMaterial = document.getElementById('rowMaterial');
     const rowTaxOnly1 = document.getElementById('rowTaxOnly1');
     const titleGrossPay = document.getElementById('titleGrossPay');
 
     if (isFixedStaff) {
       rowMaterial.style.display = 'none';
-      rowTaxOnly1.style.display = ''; // 우측 지방소득세 유지를 위한 빈 줄
+      rowTaxOnly1.style.display = '';
       titleGrossPay.innerText = '월 기본급 (정액)';
     } else {
       rowMaterial.style.display = '';
@@ -259,7 +311,6 @@
       titleGrossPay.innerText = '지급계 (수수료)';
     }
 
-    // 4. 금액 계산 및 반영
     const grossPay = d.grossPay || 0;
     const material = isFixedStaff ? 0 : (d.material || 0);
     const incomeTax = d.incomeTax || 0;
