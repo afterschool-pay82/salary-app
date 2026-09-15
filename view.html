@@ -3,7 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>급여 지급명세서 조회</title>
+  <title>(주)밝은생각 - 급여 지급명세서 조회</title>
+
+  <!-- 카카오톡 링크 미리보기 (Open Graph) 설정 -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="(주)밝은생각">
+  <meta property="og:title" content="(주)밝은생각 급여명세서 조회">
+  <meta property="og:description" content="성명과 생년월일(6자리)을 입력하여 이번 달 명세서를 확인하세요.">
+  <!-- 신뢰감을 주는 서류/급여 명세서 전용 대표 이미지 -->
+  <meta property="og:image" content="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80">
+
   <style>
     * { box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", helvetica, sans-serif; background: #f0f2f5; margin: 0; padding: 20px 15px; color: #333; }
@@ -11,8 +20,9 @@
     
     /* 인증/조회 화면 */
     #authBox { padding: 40px 24px; text-align: center; }
-    .lock-icon { font-size: 42px; margin-bottom: 12px; }
-    .auth-title { font-size: 20px; font-weight: bold; margin-bottom: 6px; color: #1f1f1f; }
+    .company-header { font-size: 14px; font-weight: bold; color: #2f54eb; margin-bottom: 4px; letter-spacing: -0.5px; }
+    .lock-icon { font-size: 38px; margin-bottom: 10px; }
+    .auth-title { font-size: 21px; font-weight: 800; margin-bottom: 6px; color: #1f1f1f; }
     .auth-desc { font-size: 13px; color: #666; margin-bottom: 24px; line-height: 1.5; }
     
     .auth-input-wrap { margin-bottom: 14px; text-align: left; }
@@ -28,6 +38,7 @@
     .slip-header { text-align: center; border-bottom: 2px solid #2f54eb; padding-bottom: 18px; margin-bottom: 20px; position: relative; }
     .btn-back { position: absolute; left: 0; top: 0; background: none; border: 1px solid #d9d9d9; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #666; }
     
+    .company-title-tag { font-size: 12px; color: #666; font-weight: 600; margin-bottom: 4px; }
     .slip-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 8px; }
     .badge-방과후 { background: #e6f7ff; color: #1890ff; }
     .badge-맞춤형 { background: #fff7e6; color: #d46b08; }
@@ -42,11 +53,11 @@
     .info-table td { width: 25%; padding: 9px 10px; border: 1px solid #eee; font-weight: 600; color: #222; }
 
     /* 차수별 수강인원 박스 */
-    .counts-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px; padding: 12px 14px; margin-bottom: 20px; font-size: 13px; }
-    .counts-header { font-weight: bold; color: #1f2937; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
-    .counts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 6px; }
-    .count-chip { background: #fff; border: 1px solid #d1d5db; padding: 5px 8px; border-radius: 4px; text-align: center; font-size: 12px; }
-    .count-chip strong { color: #1890ff; font-size: 13px; }
+    .counts-box { background: #f0f7ff; border: 1px solid #bae7ff; border-radius: 6px; padding: 12px 14px; margin-bottom: 20px; font-size: 13px; }
+    .counts-header { font-weight: bold; color: #0050b3; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .counts-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .count-chip { background: #fff; border: 1px solid #91d5ff; padding: 6px 12px; border-radius: 4px; text-align: center; font-size: 12px; }
+    .count-chip strong { color: #1890ff; font-size: 14px; font-weight: bold; }
 
     .money-section-title { font-size: 14px; font-weight: bold; color: #1f1f1f; margin-bottom: 8px; }
     .calc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
@@ -76,8 +87,9 @@
 <div class="container">
   <!-- 본인 인증 및 조회 폼 -->
   <div id="authBox">
+    <div class="company-header">(주)밝은생각</div>
     <div class="lock-icon">📋</div>
-    <div class="auth-title">급여명세서 조회</div>
+    <div class="auth-title">급여 지급명세서 조회</div>
     <div class="auth-desc">개인정보 보호를 위해 본인 확인 정보를 입력해 주세요.</div>
     
     <div class="auth-input-wrap">
@@ -97,6 +109,7 @@
   <div id="slipBox">
     <div class="slip-header">
       <button class="btn-back" onclick="goBack()">◀ 다시 조회</button>
+      <div class="company-title-tag">(주)밝은생각</div>
       <span class="slip-badge" id="badgeCategory">방과후프로그램</span>
       <h1 class="slip-title">급여 지급명세서</h1>
       <div class="slip-subtitle" id="subTitleMonth">2026-08 귀속 정산</div>
@@ -121,11 +134,11 @@
       </tr>
     </table>
 
-    <!-- 방과후프로그램 전용: 차수별 수강인원 상세 현황 -->
+    <!-- 방과후프로그램: 차수별 수강인원 상세 현황 박스 -->
     <div id="boxCounts" class="counts-box" style="display:none;">
       <div class="counts-header">
         <span>■ 차수별 수강인원 현황</span>
-        <span id="totalStudentsBadge" style="font-size:12px; color:#1890ff; font-weight:normal;"></span>
+        <span id="totalStudentsBadge" style="font-size:12px; color:#096dd9; font-weight:bold;"></span>
       </div>
       <div class="counts-grid" id="countsGrid"></div>
     </div>
@@ -185,7 +198,7 @@
 
     <div class="footer-note">
       귀하의 노고에 진심으로 감사드립니다.<br>
-      내용에 문의사항이 있으실 경우 담당자에게 연락 바랍니다.
+      내용에 문의사항이 있으실 경우 (주)밝은생각 담당자에게 연락 바랍니다.
     </div>
 
     <button class="print-btn" onclick="window.print()">명세서 인쇄 / PDF 저장</button>
@@ -247,7 +260,6 @@
 
     const isFixedStaff = (rawCat === '코디' || rawCat === '안전관리자' || d.subject === '코디' || d.subject === '안전관리자');
 
-    // 수업차시 행 처리
     const rowLessons = document.getElementById('rowLessons');
     if (isFixedStaff) {
       rowLessons.style.display = 'none';
@@ -256,16 +268,14 @@
       document.getElementById('infoLessons').innerText = (d.lessons || 0) + '차시';
     }
 
-    // 차수별 수강인원 현황 처리 (방과후프로그램만 표시)
     const boxCounts = document.getElementById('boxCounts');
     const countsGrid = document.getElementById('countsGrid');
     countsGrid.innerHTML = '';
 
-    if (rawCat === '방과후' && d.counts && Object.keys(d.counts).length > 0) {
+    if (d.counts && Object.keys(d.counts).length > 0) {
       let totalStudents = 0;
       let countChips = [];
 
-      // w1~w4 (4회), e1~e8 (8회), c1~c12 (12회) 파싱 및 내림차순 정렬
       const keys = Object.keys(d.counts).sort((a, b) => {
         const numA = parseInt(a.replace(/[^0-9]/g, ''), 10);
         const numB = parseInt(b.replace(/[^0-9]/g, ''), 10);
@@ -279,7 +289,7 @@
           const num = k.replace(/[^0-9]/g, '');
           countChips.push(`
             <div class="count-chip">
-              ${num}회: <strong>${count}</strong>명
+              ${num}회 : <strong>${count}명</strong>
             </div>
           `);
         }
@@ -288,7 +298,7 @@
       if (countChips.length > 0) {
         boxCounts.style.display = 'block';
         countsGrid.innerHTML = countChips.join('');
-        document.getElementById('totalStudentsBadge').innerText = `총 수강인원 ${totalStudents}명`;
+        document.getElementById('totalStudentsBadge').innerText = `총 수강인원: ${totalStudents}명`;
       } else {
         boxCounts.style.display = 'none';
       }
@@ -296,7 +306,6 @@
       boxCounts.style.display = 'none';
     }
 
-    // 재료비 행 처리 (코디/안전관리자 숨김)
     const rowMaterial = document.getElementById('rowMaterial');
     const rowTaxOnly1 = document.getElementById('rowTaxOnly1');
     const titleGrossPay = document.getElementById('titleGrossPay');
