@@ -8,6 +8,9 @@ window.PAYROLL_PUBLIC_DATA = [
     "birth": "890113",
     "material": 0,
     "lessons": 4,
+    "counts": {
+      "w4": 12
+    },
     "grossPay": 276000,
     "stdPay": 222713,
     "specialTax": 0,
@@ -25,6 +28,7 @@ window.PAYROLL_PUBLIC_DATA = [
     "birth": "781105",
     "material": 0,
     "lessons": 8,
+    "counts": {},
     "grossPay": 320000,
     "stdPay": 258240,
     "specialTax": 0,
@@ -42,6 +46,7 @@ window.PAYROLL_PUBLIC_DATA = [
     "birth": "820901",
     "material": 0,
     "lessons": 20,
+    "counts": {},
     "grossPay": 1000000,
     "stdPay": 806930,
     "specialTax": 8700,
