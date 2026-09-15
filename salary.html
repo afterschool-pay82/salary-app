@@ -270,7 +270,6 @@
 
   let currentEditId = null;
 
-  // 기본 설정 (영어2: 12회, 컴퓨터1: 4회, 컴퓨터2: 8회)
   const defaultSchoolSettings = {
     '창영초': { '피아노': '12', '영어': '8', '영어2': '12', '수학': '12', '컴퓨터1': '4', '컴퓨터2': '8' },
     '청량초': { '피아노': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터1': '4', '컴퓨터2': '8' }
@@ -292,7 +291,6 @@
 
   function getRecords() { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
   
-  // 학교 목록 항상 가나다순(오름차순) 정렬
   function getSchools() { 
     const schools = JSON.parse(localStorage.getItem(SCHOOL_KEY)) || ['창영초', '청량초'];
     return schools.sort((a, b) => a.localeCompare(b, 'ko'));
@@ -489,7 +487,6 @@
       return;
     }
 
-    // 방과후프로그램 모드: 구체적인 키워드('컴퓨터2', '컴퓨터1', '영어2')를 먼저 우선 판별
     const settings = getSettings();
     const schoolMap = settings[currentSchool] || {};
     
@@ -508,22 +505,28 @@
     if (mode === '8') {
       box8.style.display = 'block';
       rateLabel.innerText = '8회 완강 기준수수료';
-      badge.innerText = `● [${currentSchool}] ${currentSubject} → 방과후 8회 세분화 (n/8 환산)`;
+      badge.innerText = `● [${currentSchool}] ${currentSubject} → 방과후 8회 세분화 (n/8 회차별 원단위 절사)`;
       badge.style.color = '#fa8c16';
       if (!currentEditId) displayLessons.value = '8';
     } else if (mode === '12') {
       box12.style.display = 'block';
       rateLabel.innerText = '12회 완강 기준수수료';
-      badge.innerText = `● [${currentSchool}] ${currentSubject} → 방과후 12회 세분화 (n/12 환산)`;
+      badge.innerText = `● [${currentSchool}] ${currentSubject} → 방과후 12회 세분화 (n/12 회차별 원단위 절사)`;
       badge.style.color = '#722ed1';
       if (!currentEditId) displayLessons.value = '12';
     } else {
       box4.style.display = 'block';
       rateLabel.innerText = '4주 완강 기준수수료';
-      badge.innerText = `● [${currentSchool}] ${currentSubject} → 방과후 4회 일반 (n/4 환산)`;
+      badge.innerText = `● [${currentSchool}] ${currentSubject} → 방과후 4회 일반 (n/4 회차별 원단위 절사)`;
       badge.style.color = '#1890ff';
       if (!currentEditId) displayLessons.value = '4';
     }
+  }
+
+  // =ROUNDDOWN(단가 / 완강차수 * 수업차수, -1) 계산 함수
+  function calcRoundDownRate(baseRate, totalLessons, lessonStep) {
+    if (totalLessons === lessonStep) return baseRate; // 완강 시 본래 단가 유지
+    return Math.floor(((baseRate / totalLessons) * lessonStep) / 10) * 10;
   }
 
   function saveRecordFromModal() {
@@ -550,36 +553,43 @@
     } else if (category === '코디' || category === '안전관리자') {
       grossPay = rateOrSalary + material;
     } else if (is8) {
-      let weightedSum = 0;
+      // 8회 완강: 각 회차별 ROUNDDOWN(단가 / 8 * 회차, -1) 적용
+      let totalCoursePay = 0;
       for (let i = 1; i <= 8; i++) {
         const count = Number(document.getElementById(`e${i}`).value) || 0;
         if (count > 0) {
           counts[`e${i}`] = count;
-          weightedSum += count * (i / 8);
+          const rateForStep = calcRoundDownRate(rateOrSalary, 8, i);
+          totalCoursePay += rateForStep * count;
         }
       }
-      grossPay = Math.round(weightedSum * rateOrSalary) + material;
+      grossPay = totalCoursePay + material;
     } else if (is12) {
-      let weightedSum = 0;
+      // 12회 완강: 각 회차별 ROUNDDOWN(단가 / 12 * 회차, -1) 적용
+      let totalCoursePay = 0;
       for (let i = 1; i <= 12; i++) {
         const count = Number(document.getElementById(`c${i}`).value) || 0;
         if (count > 0) {
           counts[`c${i}`] = count;
-          weightedSum += count * (i / 12);
+          const rateForStep = calcRoundDownRate(rateOrSalary, 12, i);
+          totalCoursePay += rateForStep * count;
         }
       }
-      grossPay = Math.round(weightedSum * rateOrSalary) + material;
+      grossPay = totalCoursePay + material;
     } else {
+      // 4회 일반: 각 회차별 ROUNDDOWN(단가 / 4 * 회차, -1) 적용
       const w4 = (Number(document.getElementById('w4').value) || 0);
       const w3 = (Number(document.getElementById('w3').value) || 0);
       const w2 = (Number(document.getElementById('w2').value) || 0);
       const w1 = (Number(document.getElementById('w1').value) || 0);
-      if (w4 > 0) counts.w4 = w4;
-      if (w3 > 0) counts.w3 = w3;
-      if (w2 > 0) counts.w2 = w2;
-      if (w1 > 0) counts.w1 = w1;
+      
+      let totalCoursePay = 0;
+      if (w4 > 0) { counts.w4 = w4; totalCoursePay += calcRoundDownRate(rateOrSalary, 4, 4) * w4; }
+      if (w3 > 0) { counts.w3 = w3; totalCoursePay += calcRoundDownRate(rateOrSalary, 4, 3) * w3; }
+      if (w2 > 0) { counts.w2 = w2; totalCoursePay += calcRoundDownRate(rateOrSalary, 4, 2) * w2; }
+      if (w1 > 0) { counts.w1 = w1; totalCoursePay += calcRoundDownRate(rateOrSalary, 4, 1) * w1; }
 
-      grossPay = Math.round((w4 * 1.0 + w3 * 0.75 + w2 * 0.5 + w1 * 0.25) * rateOrSalary) + material;
+      grossPay = totalCoursePay + material;
     }
 
     const stdPay = Math.round(grossPay * 0.80693);
