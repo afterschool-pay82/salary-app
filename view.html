@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>방과후 강사료 지급명세서 조회</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .card { background: white; width: 100%; max-width: 480px; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+    h2 { text-align: center; margin-top: 0; color: #1a73e8; font-size: 20px; }
+    .form-group { margin-bottom: 14px; }
+    label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 6px; color: #444; }
+    input { width: 100%; height: 40px; padding: 0 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; outline: none; }
+    button { width: 100%; height: 42px; background: #1a73e8; color: white; border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+    button:hover { background: #1557b0; }
+    
+    /* 명세서 결과 뷰 */
+    #resultView { display: none; margin-top: 20px; border-top: 2px dashed #ddd; padding-top: 20px; }
+    .slip-box { border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; background: #fafafa; }
+    .slip-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; }
+    .total-row { border-top: 1px solid #ddd; margin-top: 8px; padding-top: 8px; font-weight: bold; font-size: 15px; color: #1a73e8; }
+    .btn-pdf { background: #34a853; margin-top: 15px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>급여명세서 간편 조회</h2>
+  
+  <div id="loginView">
+    <div class="form-group">
+      <label>성명 (강사명)</label>
+      <input type="text" id="chkName" placeholder="예: 조은이">
+    </div>
+    <div class="form-group">
+      <label>생년월일 (주민번호 앞 6자리)</label>
+      <input type="text" id="chkBirth" placeholder="예: 890113" maxlength="6">
+    </div>
+    <button type="button" onclick="verifyAndShow()">명세서 확인하기</button>
+  </div>
+
+  <div id="resultView">
+    <div class="slip-box" id="slipContent">
+      <!-- 조회 성공 시 여기에 명세서가 들어감 -->
+    </div>
+    <button type="button" class="btn-pdf" onclick="window.print()">명세서 인쇄 / PDF 저장</button>
+    <button type="button" style="background:#888;" onclick="location.reload()">다시 조회</button>
+  </div>
+</div>
+
+<script>
+  function verifyAndShow() {
+    const name = document.getElementById('chkName').value.trim();
+    const birth = document.getElementById('chkBirth').value.trim();
+
+    if (!name || !birth) {
+      alert('성명과 생년월일 앞 6자리를 모두 입력하세요.');
+      return;
+    }
+
+    // URL 파라미터 또는 전달된 암호화 데이터 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const dataStr = urlParams.get('data');
+
+    if (!dataStr) {
+      alert('유효하지 않은 링크이거나 정산 데이터가 포함되어 있지 않습니다.');
+      return;
+    }
+
+    try {
+      // 전달된 데이터 해독 (Base64 디코딩)
+      const decodedData = JSON.parse(decodeURIComponent(escape(atob(dataStr))));
+
+      // 이름 및 주민번호 앞자리 일치 검증
+      if (decodedData.name === name && decodedData.birth === birth) {
+        document.getElementById('loginView').style.display = 'none';
+        document.getElementById('resultView').style.display = 'block';
+
+        document.getElementById('slipContent').innerHTML = `
+          <div style="text-align:center; font-weight:bold; font-size:16px; margin-bottom:12px;">
+            [${decodedData.month}] 강사료 지급명세서
+          </div>
+          <div class="slip-row"><span>근무처</span><strong>${decodedData.school}</strong></div>
+          <div class="slip-row"><span>과목명</span><strong>${decodedData.subject}</strong></div>
+          <div class="slip-row"><span>강사명</span><strong>${decodedData.name} 선생님</strong></div>
+          <hr style="border:0; border-top:1px solid #eee; margin:8px 0;">
+          <div class="slip-row"><span>지급계(수수료)</span><span>${Number(decodedData.grossPay).toLocaleString()}원</span></div>
+          <div class="slip-row"><span>재료비 지원금</span><span>${Number(decodedData.material).toLocaleString()}원</span></div>
+          <hr style="border:0; border-top:1px solid #eee; margin:8px 0;">
+          <div class="slip-row" style="color:#d93025;"><span>소득세(3%)</span><span>-${Number(decodedData.incomeTax).toLocaleString()}원</span></div>
+          <div class="slip-row" style="color:#d93025;"><span>주민세(0.3%)</span><span>-${Number(decodedData.localTax).toLocaleString()}원</span></div>
+          <div class="slip-row" style="color:#d93025;"><span>특고 고용보험</span><span>-${Number(decodedData.specialTax).toLocaleString()}원</span></div>
+          <div class="slip-row" style="color:#d93025;"><span>산재보험료</span><span>-${Number(decodedData.indAccTax).toLocaleString()}원</span></div>
+          <div class="slip-row total-row">
+            <span>실수령액</span>
+            <span>${Number(decodedData.netPay).toLocaleString()}원</span>
+          </div>
+        `;
+      } else {
+        alert('입력하신 정보가 일치하지 않습니다. 이름과 생년월일을 다시 확인하세요.');
+      }
+    } catch (e) {
+      alert('데이터를 읽는 중 오류가 발생했습니다.');
+    }
+  }
+</script>
+
+</body>
+</html>

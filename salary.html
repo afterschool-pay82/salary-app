@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>급여지급대장 시스템</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", helvetica, sans-serif; background: #eef1f5; margin: 0; padding: 20px; color: #333; }
+    .main-wrapper { max-width: 1460px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    
+    .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .title-area { display: flex; align-items: center; gap: 12px; }
+    .title-area h1 { margin: 0; font-size: 22px; font-weight: 800; color: #1f1f1f; }
+    .month-select { font-size: 14px; padding: 5px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-weight: 600; outline: none; }
+    
+    .action-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .school-filter { padding: 6px 12px; font-size: 13px; border: 1px solid #d9d9d9; border-radius: 4px; min-width: 110px; outline: none; }
+    
+    .btn { padding: 7px 14px; font-size: 13px; font-weight: 600; border-radius: 4px; border: 1px solid #d9d9d9; background: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-primary { background: #2f54eb; color: #fff; border-color: #2f54eb; }
+    .btn-primary:hover { background: #1d39c4; }
+    .btn-setting { background: #52c41a; color: #fff; border-color: #52c41a; }
+    .btn-setting:hover { background: #389e0d; }
+    .btn-kakao { background: #fee500; color: #3c1e1e; border-color: #fada0a; font-weight: bold; padding: 3px 8px; font-size: 11px; border-radius: 3px; cursor: pointer; }
+    .btn-kakao:hover { background: #fada0a; }
+    .checkbox-label { margin-left: 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    
+    .summary-text { font-size: 13px; color: #666; margin-bottom: 12px; font-weight: 600; }
+    
+    table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
+    th { background: #fafafa; color: #262626; font-weight: 600; border: 1px solid #e8e8e8; padding: 9px 4px; }
+    td { border: 1px solid #e8e8e8; padding: 7px 4px; color: #434343; }
+    .money-col { text-align: right; padding-right: 8px; font-family: -apple-system, sans-serif; }
+    .highlight-blue { color: #1890ff; font-weight: bold; }
+    .name-link { font-weight: bold; cursor: pointer; color: #1890ff; text-decoration: underline; }
+    
+    /* 모달 공통 */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-content { background: #fff; width: 940px; border-radius: 8px; padding: 24px 28px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); max-height: 94vh; overflow-y: auto; }
+    .modal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; }
+    .close-icon { font-size: 20px; cursor: pointer; border: none; background: none; color: #999; }
+    
+    .row-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 20px; row-gap: 12px; margin-bottom: 14px; }
+    .input-item { display: flex; align-items: center; justify-content: space-between; }
+    .input-item label { font-size: 13px; color: #333; width: 110px; flex-shrink: 0; }
+    .input-item input, .input-item select { width: 100%; height: 34px; padding: 0 10px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; outline: none; }
+    
+    .grid-wrap { background: #fafafa; padding: 14px; border-radius: 6px; border: 1px solid #eee; margin-bottom: 14px; }
+    .grid-4w { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .grid-8w { display: grid; grid-template-columns: repeat(4, 1fr); column-gap: 12px; row-gap: 8px; }
+    .grid-12w { display: grid; grid-template-columns: repeat(4, 1fr); column-gap: 12px; row-gap: 8px; }
+    .cell-item { display: flex; align-items: center; gap: 6px; }
+    .cell-item label { font-size: 12px; color: #444; width: 72px; flex-shrink: 0; font-weight: 600; }
+    .cell-item input { width: 100%; height: 30px; padding: 0 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 12px; text-align: right; }
+
+    .modal-bottom { display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #eee; padding-top: 14px; }
+    .btn-modal-cancel { background: #fff; border: 1px solid #d9d9d9; color: #333; padding: 8px 18px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    .btn-modal-save { background: #2f54eb; border: 1px solid #2f54eb; color: #fff; padding: 8px 24px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
+
+    .setting-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+    .setting-table th { background: #f0f2f5; padding: 10px; border: 1px solid #d9d9d9; }
+    .setting-table td { padding: 10px; border: 1px solid #d9d9d9; text-align: center; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #printArea, #printArea * { visibility: visible; }
+      #printArea { position: absolute; left: 0; top: 0; width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+  <div class="top-header">
+    <div class="title-area">
+      <h1>급여지급대장</h1>
+      <input type="month" id="activeMonth" class="month-select" value="2026-08" onchange="renderTable()">
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <select id="schoolFilter" class="school-filter" onchange="renderTable()"></select>
+    <button class="btn btn-primary" onclick="openRecordModal()">강사/코디 추가</button>
+    <button class="btn btn-setting" onclick="openSchoolSettingModal()">학교별 과목 회차 설정 (8회/12회)</button>
+    <button class="btn" onclick="addNewSchoolPrompt()">+ 학교 등록</button>
+    <button class="btn" onclick="exportCSV()">지급명세서 저장</button>
+    <label class="checkbox-label">
+      <input type="checkbox" id="chkOnlyNetPay" onchange="toggleColumns()"> 실지급액만 보기
+    </label>
+  </div>
+
+  <div class="summary-text" id="summaryCounter">전체 0명, 총 지급계 ₩0</div>
+
+  <table>
+    <thead>
+      <tr>
+        <th rowspan="2">근무처</th>
+        <th rowspan="2">과목명</th>
+        <th rowspan="2">강사명</th>
+        <th rowspan="2" class="detail-col">재료비</th>
+        <th rowspan="2" class="detail-col">수업차시</th>
+        <th rowspan="2">지급계</th>
+        <th rowspan="2" class="detail-col">경비율<br>제외</th>
+        <th rowspan="2" class="detail-col">특고료</th>
+        <th rowspan="2" class="detail-col">산재<br>보험료</th>
+        <th colspan="2" class="detail-col">공제액</th>
+        <th rowspan="2">실지급액</th>
+        <th rowspan="2">발송 / 관리</th>
+      </tr>
+      <tr class="detail-col">
+        <th>소득세</th>
+        <th>주민세</th>
+      </tr>
+    </thead>
+    <tbody id="payrollTbody"></tbody>
+  </table>
+</div>
+
+<!-- 학교별 과목 설정 모달 -->
+<div class="modal-overlay" id="settingModal">
+  <div class="modal-content" style="width: 650px;">
+    <div class="modal-top">
+      <h2>학교별 8회 / 12회 세분화 과목 설정</h2>
+      <button class="close-icon" onclick="closeSettingModal()">&times;</button>
+    </div>
+    <div>
+      <label style="font-size: 13px; font-weight: bold;">설정할 학교 선택:</label>
+      <select id="settingSchoolSelect" onchange="loadSchoolSettings()" style="width: 100%; height: 34px; padding: 0 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-weight: bold; margin-top: 6px;"></select>
+    </div>
+    <table class="setting-table">
+      <thead>
+        <tr><th>과목명</th><th>일반 (4회)</th><th>8회 세분화</th><th>12회 세분화</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>피아노</strong></td><td><input type="radio" name="set_piano" value="4"></td><td><input type="radio" name="set_piano" value="8"></td><td><input type="radio" name="set_piano" value="12" checked></td></tr>
+        <tr><td><strong>영어</strong></td><td><input type="radio" name="set_english" value="4"></td><td><input type="radio" name="set_english" value="8" checked></td><td><input type="radio" name="set_english" value="12"></td></tr>
+        <tr><td><strong>수학</strong></td><td><input type="radio" name="set_math" value="4"></td><td><input type="radio" name="set_math" value="8" checked></td><td><input type="radio" name="set_math" value="12"></td></tr>
+        <tr><td><strong>컴퓨터</strong></td><td><input type="radio" name="set_computer" value="4"></td><td><input type="radio" name="set_computer" value="8"></td><td><input type="radio" name="set_computer" value="12" checked></td></tr>
+      </tbody>
+    </table>
+    <div class="modal-bottom">
+      <button class="btn-modal-cancel" onclick="closeSettingModal()">닫기</button>
+      <button class="btn-modal-save" onclick="saveSchoolSettings()">설정 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 강사 등록 모달 -->
+<div class="modal-overlay" id="recordModal">
+  <div class="modal-content">
+    <div class="modal-top">
+      <div style="display:flex; align-items:center; gap:20px;">
+        <h2>강사/코디 정산 등록</h2>
+        <label style="font-size:13px; color:#555; cursor:pointer;">
+          <input type="checkbox" id="isCoordinator" onchange="onInputCheckAutoMode()"> <strong>코디/안전관리자</strong> (기본급 정산)
+        </label>
+      </div>
+      <button class="close-icon" onclick="closeRecordModal()">&times;</button>
+    </div>
+
+    <div class="row-grid-3">
+      <div class="input-item">
+        <label>학교 선택</label>
+        <select id="modalSchool" onchange="onInputCheckAutoMode()"></select>
+      </div>
+      <div class="input-item">
+        <label>지급월 선택</label>
+        <input type="month" id="modalMonth" value="2026-08">
+      </div>
+      <div class="input-item">
+        <label>생년월일</label>
+        <input type="text" id="birth" placeholder="예: 890113">
+      </div>
+    </div>
+
+    <div class="row-grid-3">
+      <div class="input-item">
+        <label>과목명</label>
+        <input type="text" id="subject" value="축구교실" onkeyup="onInputCheckAutoMode()">
+      </div>
+      <div class="input-item">
+        <label>강사명</label>
+        <input type="text" id="name" value="조은이">
+      </div>
+      <div class="input-item">
+        <label id="rateLabel" style="font-weight:bold; color:#2f54eb;">기준 수수료</label>
+        <input type="number" id="baseRate" value="26000" style="font-weight:bold;">
+      </div>
+    </div>
+
+    <div id="modeStatusBadge" style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#1890ff;"></div>
+
+    <div id="boxGeneral4" class="grid-wrap">
+      <div class="grid-4w">
+        <div class="cell-item"><label>4회(완강)</label><input type="number" id="w4" value="27" placeholder="0"></div>
+        <div class="cell-item"><label>3회</label><input type="number" id="w3" placeholder="0"></div>
+        <div class="cell-item"><label>2회</label><input type="number" id="w2" placeholder="0"></div>
+        <div class="cell-item"><label>1회</label><input type="number" id="w1" placeholder="0"></div>
+      </div>
+    </div>
+
+    <div id="boxDetailed8" class="grid-wrap" style="display:none;">
+      <div class="grid-8w">
+        <div class="cell-item"><label>8회(완강)</label><input type="number" id="e8" placeholder="0"></div>
+        <div class="cell-item"><label>7회</label><input type="number" id="e7" placeholder="0"></div>
+        <div class="cell-item"><label>6회</label><input type="number" id="e6" placeholder="0"></div>
+        <div class="cell-item"><label>5회</label><input type="number" id="e5" placeholder="0"></div>
+        <div class="cell-item"><label>4회</label><input type="number" id="e4" placeholder="0"></div>
+        <div class="cell-item"><label>3회</label><input type="number" id="e3" placeholder="0"></div>
+        <div class="cell-item"><label>2회</label><input type="number" id="e2" placeholder="0"></div>
+        <div class="cell-item"><label>1회</label><input type="number" id="e1" placeholder="0"></div>
+      </div>
+    </div>
+
+    <div id="boxDetailed12" class="grid-wrap" style="display:none;">
+      <div class="grid-12w">
+        <div class="cell-item"><label>12회(완강)</label><input type="number" id="c12" placeholder="0"></div>
+        <div class="cell-item"><label>11회</label><input type="number" id="c11" placeholder="0"></div>
+        <div class="cell-item"><label>10회</label><input type="number" id="c10" placeholder="0"></div>
+        <div class="cell-item"><label>9회</label><input type="number" id="c9" placeholder="0"></div>
+        <div class="cell-item"><label>8회</label><input type="number" id="c8" placeholder="0"></div>
+        <div class="cell-item"><label>7회</label><input type="number" id="c7" placeholder="0"></div>
+        <div class="cell-item"><label>6회</label><input type="number" id="c6" placeholder="0"></div>
+        <div class="cell-item"><label>5회</label><input type="number" id="c5" placeholder="0"></div>
+        <div class="cell-item"><label>4회</label><input type="number" id="c4" placeholder="0"></div>
+        <div class="cell-item"><label>3회</label><input type="number" id="c3" placeholder="0"></div>
+        <div class="cell-item"><label>2회</label><input type="number" id="c2" placeholder="0"></div>
+        <div class="cell-item"><label>1회</label><input type="number" id="c1" placeholder="0"></div>
+      </div>
+    </div>
+
+    <div class="row-grid-3">
+      <div class="input-item"><label>재료비 지원금</label><input type="number" id="material" placeholder="0"></div>
+      <div class="input-item"><label>수업차시(표시용)</label><input type="number" id="displayLessons" value="4"></div>
+      <div class="input-item"><label>비고</label><input type="text" id="note" placeholder="특이사항"></div>
+    </div>
+
+    <div class="modal-bottom">
+      <button class="btn-modal-cancel" onclick="closeRecordModal()">취소</button>
+      <button class="btn-modal-save" onclick="saveRecordFromModal()">저장</button>
+    </div>
+  </div>
+</div>
+
+<div id="printArea" style="display:none;"></div>
+
+<script>
+  const STORAGE_KEY = 'afterschool_master_data_v5';
+  const SCHOOL_KEY = 'afterschool_master_schools_v5';
+  const SETTING_KEY = 'afterschool_school_subjects_setting_v5';
+
+  const defaultSchoolSettings = {
+    '청량초': { '피아노': '12', '영어': '8', '수학': '8', '컴퓨터': '12' },
+    '창영초': { '피아노': '12', '영어': '8', '수학': '12', '컴퓨터': '8' }
+  };
+
+  const defaultData = [
+    { id: 1, school: '청량초', month: '2026-08', subject: '축구교실', name: '조은이', birth: '890113', material: 0, lessons: 4, grossPay: 702000, stdPay: 566514, specialTax: 0, indAccTax: 1860, incomeTax: 21060, localTax: 2100, netPay: 676980 },
+    { id: 2, school: '창영초', month: '2026-08', subject: '놀이영어(늘봄)', name: '정혜숙', birth: '781105', material: 0, lessons: 8, grossPay: 320000, stdPay: 258240, specialTax: 0, indAccTax: 850, incomeTax: 9600, localTax: 960, netPay: 308590 }
+  ];
+
+  window.onload = function() {
+    if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+    if (!localStorage.getItem(SCHOOL_KEY)) localStorage.setItem(SCHOOL_KEY, JSON.stringify(['청량초', '창영초']));
+    if (!localStorage.getItem(SETTING_KEY)) localStorage.setItem(SETTING_KEY, JSON.stringify(defaultSchoolSettings));
+    
+    initSchoolDropdowns();
+    renderTable();
+  };
+
+  function getRecords() { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  function getSchools() { return JSON.parse(localStorage.getItem(SCHOOL_KEY)) || ['청량초', '창영초']; }
+  function getSettings() { return JSON.parse(localStorage.getItem(SETTING_KEY)) || {}; }
+
+  function initSchoolDropdowns() {
+    const schools = getSchools();
+    const sf = document.getElementById('schoolFilter');
+    const ms = document.getElementById('modalSchool');
+    const ss = document.getElementById('settingSchoolSelect');
+
+    sf.innerHTML = '<option value="전체">전체 학교</option>' + schools.map(s => `<option value="${s}">${s}</option>`).join('');
+    ms.innerHTML = schools.map(s => `<option value="${s}">${s}</option>`).join('');
+    ss.innerHTML = schools.map(s => `<option value="${s}">${s}</option>`).join('');
+  }
+
+  function addNewSchoolPrompt() {
+    const s = prompt('새로운 학교명을 입력하세요:');
+    if (!s || !s.trim()) return;
+    const schools = getSchools();
+    if (schools.includes(s.trim())) return alert('이미 존재하는 학교입니다.');
+    schools.push(s.trim());
+    localStorage.setItem(SCHOOL_KEY, JSON.stringify(schools));
+    
+    const settings = getSettings();
+    settings[s.trim()] = { '피아노': '12', '영어': '8', '수학': '8', '컴퓨터': '12' };
+    localStorage.setItem(SETTING_KEY, JSON.stringify(settings));
+
+    initSchoolDropdowns();
+    alert(`[${s.trim()}] 학교가 등록되었습니다.`);
+  }
+
+  function openSchoolSettingModal() {
+    initSchoolDropdowns();
+    loadSchoolSettings();
+    document.getElementById('settingModal').style.display = 'flex';
+  }
+
+  function closeSettingModal() {
+    document.getElementById('settingModal').style.display = 'none';
+  }
+
+  function loadSchoolSettings() {
+    const targetSchool = document.getElementById('settingSchoolSelect').value;
+    const settings = getSettings();
+    const map = settings[targetSchool] || { '피아노': '12', '영어': '8', '수학': '8', '컴퓨터': '12' };
+
+    setRadioVal('set_piano', map['피아노'] || '12');
+    setRadioVal('set_english', map['영어'] || '8');
+    setRadioVal('set_math', map['수학'] || '8');
+    setRadioVal('set_computer', map['컴퓨터'] || '12');
+  }
+
+  function setRadioVal(name, val) {
+    const r = document.querySelector(`input[name="${name}"][value="${val}"]`);
+    if (r) r.checked = true;
+  }
+
+  function getRadioVal(name) {
+    const r = document.querySelector(`input[name="${name}"]:checked`);
+    return r ? r.value : '4';
+  }
+
+  function saveSchoolSettings() {
+    const targetSchool = document.getElementById('settingSchoolSelect').value;
+    const settings = getSettings();
+    settings[targetSchool] = {
+      '피아노': getRadioVal('set_piano'),
+      '영어': getRadioVal('set_english'),
+      '수학': getRadioVal('set_math'),
+      '컴퓨터': getRadioVal('set_computer')
+    };
+    localStorage.setItem(SETTING_KEY, JSON.stringify(settings));
+    alert(`[${targetSchool}] 설정이 저장되었습니다.`);
+    closeSettingModal();
+  }
+
+  function openRecordModal() {
+    document.getElementById('isCoordinator').checked = false;
+    document.getElementById('modalMonth').value = document.getElementById('activeMonth').value;
+    onInputCheckAutoMode();
+    document.getElementById('recordModal').style.display = 'flex';
+  }
+
+  function closeRecordModal() {
+    document.getElementById('recordModal').style.display = 'none';
+  }
+
+  function onInputCheckAutoMode() {
+    const isCoord = document.getElementById('isCoordinator').checked;
+    const currentSchool = document.getElementById('modalSchool').value;
+    const currentSubject = document.getElementById('subject').value.trim();
+
+    const box4 = document.getElementById('boxGeneral4');
+    const box8 = document.getElementById('boxDetailed8');
+    const box12 = document.getElementById('boxDetailed12');
+    const rateLabel = document.getElementById('rateLabel');
+    const badge = document.getElementById('modeStatusBadge');
+    const displayLessons = document.getElementById('displayLessons');
+
+    box4.style.display = 'none';
+    box8.style.display = 'none';
+    box12.style.display = 'none';
+
+    if (isCoord) {
+      rateLabel.innerText = '월 기본급 (정액)';
+      badge.innerText = '● 코디/관리자 모드 (기본급 입력)';
+      badge.style.color = '#52c41a';
+      displayLessons.value = '20';
+      return;
+    }
+
+    const settings = getSettings();
+    const schoolMap = settings[currentSchool] || {};
+    
+    let mode = '4';
+    for (const key of ['피아노', '영어', '수학', '컴퓨터']) {
+      if (currentSubject.includes(key)) {
+        mode = schoolMap[key] || '4';
+        break;
+      }
+    }
+
+    if (mode === '8') {
+      box8.style.display = 'block';
+      rateLabel.innerText = '8회 완강 기준수수료';
+      badge.innerText = `● [${currentSchool}] ${currentSubject} → 8회 세분화 모드 (n/8 환산)`;
+      badge.style.color = '#fa8c16';
+      displayLessons.value = '8';
+    } else if (mode === '12') {
+      box12.style.display = 'block';
+      rateLabel.innerText = '12회 완강 기준수수료';
+      badge.innerText = `● [${currentSchool}] ${currentSubject} → 12회 세분화 모드 (n/12 환산)`;
+      badge.style.color = '#722ed1';
+      displayLessons.value = '12';
+    } else {
+      box4.style.display = 'block';
+      rateLabel.innerText = '4주 완강 기준수수료';
+      badge.innerText = `● [${currentSchool}] ${currentSubject} → 4회 일반 모드 (n/4 환산)`;
+      badge.style.color = '#1890ff';
+      displayLessons.value = '4';
+    }
+  }
+
+  function saveRecordFromModal() {
+    const isCoord = document.getElementById('isCoordinator').checked;
+    const school = document.getElementById('modalSchool').value;
+    const month = document.getElementById('modalMonth').value;
+    const birth = document.getElementById('birth').value;
+    const subject = document.getElementById('subject').value;
+    const name = document.getElementById('name').value;
+    const rateOrSalary = Number(document.getElementById('baseRate').value) || 0;
+    const material = Number(document.getElementById('material').value) || 0;
+    const displayLessons = Number(document.getElementById('displayLessons').value) || 4;
+
+    if (!name.trim()) return alert('강사명을 입력하세요.');
+
+    let grossPay = 0;
+    const is8 = (document.getElementById('boxDetailed8').style.display !== 'none');
+    const is12 = (document.getElementById('boxDetailed12').style.display !== 'none');
+
+    if (isCoord) {
+      grossPay = rateOrSalary + material;
+    } else if (is8) {
+      let weightedSum = 0;
+      for (let i = 1; i <= 8; i++) {
+        const count = Number(document.getElementById(`e${i}`).value) || 0;
+        if (count > 0) weightedSum += count * (i / 8);
+      }
+      grossPay = Math.round(weightedSum * rateOrSalary) + material;
+    } else if (is12) {
+      let weightedSum = 0;
+      for (let i = 1; i <= 12; i++) {
+        const count = Number(document.getElementById(`c${i}`).value) || 0;
+        if (count > 0) weightedSum += count * (i / 12);
+      }
+      grossPay = Math.round(weightedSum * rateOrSalary) + material;
+    } else {
+      const w4 = (Number(document.getElementById('w4').value) || 0) * 1.0;
+      const w3 = (Number(document.getElementById('w3').value) || 0) * 0.75;
+      const w2 = (Number(document.getElementById('w2').value) || 0) * 0.5;
+      const w1 = (Number(document.getElementById('w1').value) || 0) * 0.25;
+      grossPay = Math.round((w4 + w3 + w2 + w1) * rateOrSalary) + material;
+    }
+
+    const stdPay = Math.round(grossPay * 0.80693);
+    let specialTax = 0;
+    if (stdPay >= 800000) specialTax = Math.floor((grossPay * 0.0087) / 10) * 10;
+
+    const indAccTax = Math.floor((grossPay * 0.00265) / 10) * 10;
+    const incomeTax = Math.floor((grossPay * 0.03) / 10) * 10;
+    const localTax = Math.floor((incomeTax * 0.1) / 10) * 10;
+    const netPay = grossPay - (specialTax + indAccTax + incomeTax + localTax);
+
+    const records = getRecords();
+    records.push({
+      id: Date.now(),
+      school, month, subject, name, birth, material, lessons: displayLessons,
+      grossPay, stdPay, specialTax, indAccTax, incomeTax, localTax, netPay
+    });
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    closeRecordModal();
+    renderTable();
+  }
+
+  function renderTable() {
+    const records = getRecords();
+    const schoolFilter = document.getElementById('schoolFilter').value;
+    const activeMonth = document.getElementById('activeMonth').value;
+
+    const filtered = records.filter(r => {
+      const matchSchool = schoolFilter === '전체' || r.school === schoolFilter;
+      const matchMonth = r.month === activeMonth;
+      return matchSchool && matchMonth;
+    });
+
+    const tbody = document.getElementById('payrollTbody');
+    tbody.innerHTML = '';
+
+    let totalSum = 0;
+
+    filtered.forEach(item => {
+      totalSum += item.grossPay;
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.school}</td>
+        <td>${item.subject}</td>
+        <td><span class="name-link" onclick="printPayslip(${item.id})">${item.name}</span></td>
+        <td class="money-col detail-col">${item.material.toLocaleString()}</td>
+        <td class="detail-col">${item.lessons}</td>
+        <td class="money-col" style="font-weight:bold;">${item.grossPay.toLocaleString()}</td>
+        <td class="money-col detail-col">${item.stdPay.toLocaleString()}</td>
+        <td class="money-col detail-col">${item.specialTax ? item.specialTax.toLocaleString() : '0'}</td>
+        <td class="money-col detail-col">${item.indAccTax.toLocaleString()}</td>
+        <td class="money-col detail-col">${item.incomeTax.toLocaleString()}</td>
+        <td class="money-col detail-col">${item.localTax.toLocaleString()}</td>
+        <td class="money-col highlight-blue">${item.netPay.toLocaleString()}</td>
+        <td>
+          <button class="btn-kakao" onclick="copyKakaoSlip(${item.id})">카톡 복사</button>
+          <button style="border:none; background:none; color:red; cursor:pointer; font-size:11px;" onclick="deleteItem(${item.id})">삭제</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+
+    document.getElementById('summaryCounter').innerText = 
+      `전체 ${filtered.length}명, 총 지급계 ₩${totalSum.toLocaleString()}`;
+  }
+
+  // --- 무료 카카오톡 명세서 복사 기능 ---
+  function copyKakaoSlip(id) {
+    const item = getRecords().find(r => r.id === id);
+    if (!item) return;
+
+    const text = 
+`[${item.month} 방과후 강사료 지급명세]
+- 근무처: ${item.school}
+- 과목명: ${item.subject}
+- 강사명: ${item.name} 선생님
+
+■ 지급 내역
+- 지급계(수수료): ${item.grossPay.toLocaleString()}원
+- 재료비: ${item.material.toLocaleString()}원
+
+■ 공제 내역
+- 사업소득세(3%): ${item.incomeTax.toLocaleString()}원
+- 주민세(0.3%): ${item.localTax.toLocaleString()}원
+- 특고 고용보험: ${item.specialTax.toLocaleString()}원
+- 산재보험료: ${item.indAccTax.toLocaleString()}원
+- 공제합계: ${(item.incomeTax + item.localTax + item.specialTax + item.indAccTax).toLocaleString()}원
+
+★ 차인지급액(실수령액): ${item.netPay.toLocaleString()}원
+
+노고에 진심으로 감사드립니다.`;
+
+    navigator.clipboard.writeText(text).then(() => {
+      alert(`[${item.name}] 강사님의 명세서 내용이 복사되었습니다!\n\n카카오톡 채팅창에 '붙여넣기(Ctrl + V)' 하시면 바로 전송됩니다.`);
+    }).catch(() => {
+      prompt('아래 텍스트를 복사하여 카카오톡에 붙여넣으세요:', text);
+    });
+  }
+
+  function toggleColumns() {
+    const chk = document.getElementById('chkOnlyNetPay').checked;
+    const detailCols = document.querySelectorAll('.detail-col');
+    detailCols.forEach(col => { col.style.display = chk ? 'none' : ''; });
+  }
+
+  function deleteItem(id) {
+    if (!confirm('삭제하시겠습니까?')) return;
+    let records = getRecords();
+    records = records.filter(r => r.id !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    renderTable();
+  }
+
+  function printPayslip(id) {
+    const item = getRecords().find(r => r.id === id);
+    if (!item) return;
+
+    const printArea = document.getElementById('printArea');
+    printArea.style.display = 'block';
+    printArea.innerHTML = `
+      <div style="border: 2px solid #333; padding: 25px; max-width: 600px; margin: 20px auto; font-family: 'Malgun Gothic';">
+        <h2 style="text-align: center; margin-bottom: 25px;">방과후 강사료 지급명세서</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <tr><th>근무처</th><td>${item.school}</td><th>정산월</th><td>${item.month}</td></tr>
+          <tr><th>성명</th><td>${item.name}</td><th>생년월일</th><td>${item.birth}</td></tr>
+          <tr><th>과목명</th><td colspan="3">${item.subject}</td></tr>
+        </table>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <tr style="background: #f5f5f5;"><th colspan="2">지급 항목</th><th colspan="2">공제 항목</th></tr>
+          <tr><td>지급계</td><td style="text-align:right;">${item.grossPay.toLocaleString()}원</td><td>소득세(3%)</td><td style="text-align:right;">${item.incomeTax.toLocaleString()}원</td></tr>
+          <tr><td>재료비</td><td style="text-align:right;">${item.material.toLocaleString()}원</td><td>주민세(0.3%)</td><td style="text-align:right;">${item.localTax.toLocaleString()}원</td></tr>
+          <tr><td></td><td></td><td>특고 고용보험</td><td style="text-align:right;">${item.specialTax.toLocaleString()}원</td></tr>
+          <tr><td></td><td></td><td>산재보험료</td><td style="text-align:right;">${item.indAccTax.toLocaleString()}원</td></tr>
+        </table>
+        <div style="background: #eef3fc; padding: 15px; text-align: center; font-size: 16px; font-weight: bold; border: 1px solid #b8cde8;">
+          실 수령액 : ${item.netPay.toLocaleString()} 원
+        </div>
+      </div>
+    `;
+    window.print();
+    printArea.style.display = 'none';
+  }
+
+  function exportCSV() {
+    const records = getRecords();
+    let csv = '\uFEFF근무처,과목명,강사명,재료비,수업차시,지급계,경비율제외,특고료,산재보험료,소득세,주민세,실지급액\n';
+    records.forEach(r => {
+      csv += `${r.school},${r.subject},${r.name},${r.material},${r.lessons},${r.grossPay},${r.stdPay},${r.specialTax},${r.indAccTax},${r.incomeTax},${r.localTax},${r.netPay}\n`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `급여지급대장_${document.getElementById('activeMonth').value}.csv`;
+    link.click();
+  }
+</script>
+
+</body>
+</html>
