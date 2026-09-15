@@ -54,5 +54,23 @@ window.PAYROLL_PUBLIC_DATA = [
     "incomeTax": 30000,
     "localTax": 3000,
     "netPay": 955650
+  },
+  {
+    "school": "남부초",
+    "category": "코디",
+    "month": "2026-08",
+    "subject": "코디네이터",
+    "name": "천영숙",
+    "birth": "820901",
+    "material": 0,
+    "lessons": 0,
+    "counts": {},
+    "grossPay": 1000000,
+    "stdPay": 806930,
+    "specialTax": 8700,
+    "indAccTax": 2650,
+    "incomeTax": 30000,
+    "localTax": 3000,
+    "netPay": 955650
   }
 ];
