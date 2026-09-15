@@ -13,12 +13,14 @@
     .title-area h1 { margin: 0; font-size: 22px; font-weight: 800; color: #1f1f1f; }
     .month-select { font-size: 14px; padding: 5px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-weight: 600; outline: none; }
     
-    .action-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .action-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
     .school-filter { padding: 6px 12px; font-size: 13px; border: 1px solid #d9d9d9; border-radius: 4px; min-width: 110px; outline: none; }
     
     .btn { padding: 7px 14px; font-size: 13px; font-weight: 600; border-radius: 4px; border: 1px solid #d9d9d9; background: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
     .btn-primary { background: #2f54eb; color: #fff; border-color: #2f54eb; }
     .btn-primary:hover { background: #1d39c4; }
+    .btn-publish { background: #fa8c16; color: #fff; border-color: #fa8c16; font-weight: bold; }
+    .btn-publish:hover { background: #d46b08; }
     .btn-setting { background: #52c41a; color: #fff; border-color: #52c41a; }
     .btn-setting:hover { background: #389e0d; }
     .checkbox-label { margin-left: 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
@@ -38,10 +40,7 @@
     .cat-코디 { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
     .cat-안전관리자 { background: #f9f0ff; color: #722ed1; border: 1px solid #d3adf7; }
 
-    /* 버튼 스타일 */
-    .btn-link-copy { border: 1px solid #d9d9d9; background: #fafafa; color: #333; padding: 4px 7px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; }
-    .btn-link-copy:hover { background: #f0f0f0; border-color: #bfbfbf; }
-    .btn-print { border: 1px solid #d9d9d9; background: #fff; color: #1890ff; padding: 4px 7px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; margin-left: 3px; }
+    .btn-print { border: 1px solid #d9d9d9; background: #fff; color: #1890ff; padding: 4px 7px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; }
     .btn-del { border: 1px solid #ffa39e; background: #fff1f0; color: #f5222d; padding: 4px 7px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; margin-left: 3px; }
 
     /* 모달 공통 */
@@ -94,9 +93,10 @@
   <div class="action-bar">
     <select id="schoolFilter" class="school-filter" onchange="renderTable()"></select>
     <button class="btn btn-primary" onclick="openRecordModal()">정산 등록 (방과후/맞춤형/코디/안전)</button>
-    <button class="btn btn-setting" onclick="openSchoolSettingModal()">학교별 과목 회차 설정 (8회/12회)</button>
+    <button class="btn btn-publish" onclick="exportDataJs()">📢 명세서 데이터 발행 (data.js 저장)</button>
+    <button class="btn btn-setting" onclick="openSchoolSettingModal()">학교별 회차 설정</button>
     <button class="btn" onclick="addNewSchoolPrompt()">+ 학교 등록</button>
-    <button class="btn" onclick="exportCSV()">지급명세서 저장</button>
+    <button class="btn" onclick="exportCSV()">지급명세서 CSV 저장</button>
     <label class="checkbox-label">
       <input type="checkbox" id="chkOnlyNetPay" onchange="toggleColumns()"> 실지급액만 보기
     </label>
@@ -119,7 +119,7 @@
         <th rowspan="2" class="detail-col">산재<br>보험료</th>
         <th colspan="2" class="detail-col">공제액</th>
         <th rowspan="2">실지급액</th>
-        <th rowspan="2">발송 및 관리</th>
+        <th rowspan="2">관리</th>
       </tr>
       <tr class="detail-col">
         <th>소득세</th>
@@ -167,7 +167,6 @@
       <button class="close-icon" onclick="closeRecordModal()">&times;</button>
     </div>
 
-    <!-- 구분 라디오 버튼 4개 -->
     <div class="type-selector-bar">
       <span>구분 선택:</span>
       <label><input type="radio" name="calcCategory" value="방과후" checked onchange="onChangeCategory()"> 방과후프로그램</label>
@@ -208,7 +207,6 @@
 
     <div id="modeStatusBadge" style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#1890ff;"></div>
 
-    <!-- 방과후 4회 -->
     <div id="boxGeneral4" class="grid-wrap">
       <div class="grid-4w">
         <div class="cell-item"><label>4회(완강)</label><input type="number" id="w4" value="27" placeholder="0"></div>
@@ -218,7 +216,6 @@
       </div>
     </div>
 
-    <!-- 방과후 8회 -->
     <div id="boxDetailed8" class="grid-wrap" style="display:none;">
       <div class="grid-8w">
         <div class="cell-item"><label>8회(완강)</label><input type="number" id="e8" placeholder="0"></div>
@@ -232,7 +229,6 @@
       </div>
     </div>
 
-    <!-- 방과후 12회 -->
     <div id="boxDetailed12" class="grid-wrap" style="display:none;">
       <div class="grid-12w">
         <div class="cell-item"><label>12회(완강)</label><input type="number" id="c12" placeholder="0"></div>
@@ -395,7 +391,6 @@
     document.getElementById('recordModal').style.display = 'flex';
   }
 
-  // 강사명 클릭 시 수정 모달 열기
   function openEditRecordModal(id) {
     const records = getRecords();
     const item = records.find(r => r.id === id);
@@ -480,7 +475,6 @@
       return;
     }
 
-    // [방과후프로그램] 모드
     const settings = getSettings();
     const schoolMap = settings[currentSchool] || {};
     
@@ -634,7 +628,6 @@
         <td class="money-col detail-col">${item.localTax.toLocaleString()}</td>
         <td class="money-col highlight-blue">${item.netPay.toLocaleString()}</td>
         <td>
-          <button class="btn-link-copy" onclick="copyViewLink(${item.id})" title="온라인 명세서 URL 복사">링크 복사</button>
           <button class="btn-print" onclick="printPayslip(${item.id})">인쇄</button>
           <button class="btn-del" onclick="deleteItem(${item.id})">삭제</button>
         </td>
@@ -646,38 +639,42 @@
       `전체 ${filtered.length}명, 총 지급계 ₩${totalSum.toLocaleString()}`;
   }
 
-  // --- 온라인 명세서 URL 복사 기능 ---
-  function copyViewLink(id) {
-    const item = getRecords().find(r => r.id === id);
-    if (!item) return;
+  // --- 공통 조회용 data.js 파일 내보내기 ---
+  function exportDataJs() {
+    const records = getRecords();
+    if (records.length === 0) return alert('등록된 정산 내역이 없습니다.');
 
-    const payload = JSON.stringify({
-      school: item.school,
-      category: item.category || '방과후',
-      month: item.month,
-      subject: item.subject,
-      name: item.name,
-      birth: item.birth,
-      material: item.material,
-      lessons: item.lessons,
-      grossPay: item.grossPay,
-      stdPay: item.stdPay,
-      specialTax: item.specialTax,
-      indAccTax: item.indAccTax,
-      incomeTax: item.incomeTax,
-      localTax: item.localTax,
-      netPay: item.netPay
-    });
+    // view.html에서 사용할 공개용 데이터 (성명, 생년월일, 정산내역 포함)
+    const exportList = records.map(r => ({
+      school: r.school,
+      category: r.category || '방과후',
+      month: r.month,
+      subject: r.subject,
+      name: r.name.trim(),
+      birth: (r.birth || '').trim(),
+      material: r.material,
+      lessons: r.lessons,
+      grossPay: r.grossPay,
+      stdPay: r.stdPay,
+      specialTax: r.specialTax,
+      indAccTax: r.indAccTax,
+      incomeTax: r.incomeTax,
+      localTax: r.localTax,
+      netPay: r.netPay
+    }));
 
-    const encodedData = encodeURIComponent(btoa(unescape(encodeURIComponent(payload))));
-    const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-    const viewUrl = `${baseUrl}/view.html?data=${encodedData}`;
+    const fileContent = "window.PAYROLL_PUBLIC_DATA = " + JSON.stringify(exportList, null, 2) + ";";
+    const blob = new Blob([fileContent], { type: "application/javascript;charset=utf-8;" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "data.js";
+    link.click();
 
-    navigator.clipboard.writeText(viewUrl).then(() => {
-      alert(`[${item.name}] 님의 온라인 명세서 링크가 복사되었습니다!\n\n문자나 메신저에 붙여넣기(Ctrl + V)하여 전달하시면 됩니다.\n\n주소: ${viewUrl}`);
-    }).catch(() => {
-      prompt('아래 명세서 링크를 복사하세요:', viewUrl);
-    });
+    alert(
+      "✅ [data.js] 파일이 다운로드되었습니다!\n\n" +
+      "이 파일을 GitHub 저장소(salary-app)에 'Upload files'로 끌어다 올리시면,\n" +
+      "모든 강사님이 공통 링크(view.html) 하나로 본인 명세서를 조회할 수 있게 됩니다."
+    );
   }
 
   function toggleColumns() {
