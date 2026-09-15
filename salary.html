@@ -145,12 +145,12 @@
   </div>
 </div>
 
-<!-- 강사 등록 모달 -->
+<!-- 강사 등록 및 수정 모달 -->
 <div class="modal-overlay" id="recordModal">
   <div class="modal-content">
     <div class="modal-top">
       <div style="display:flex; align-items:center; gap:20px;">
-        <h2>강사/코디 정산 등록</h2>
+        <h2 id="modalTitle">강사/코디 정산 등록</h2>
         <label style="font-size:13px; color:#555; cursor:pointer;">
           <input type="checkbox" id="isCoordinator" onchange="onInputCheckAutoMode()"> <strong>코디/안전관리자</strong> (기본급 정산)
         </label>
@@ -237,7 +237,7 @@
 
     <div class="modal-bottom">
       <button class="btn-modal-cancel" onclick="closeRecordModal()">취소</button>
-      <button class="btn-modal-save" onclick="saveRecordFromModal()">저장</button>
+      <button class="btn-modal-save" id="btnSaveRecord" onclick="saveRecordFromModal()">저장</button>
     </div>
   </div>
 </div>
@@ -249,14 +249,16 @@
   const SCHOOL_KEY = 'afterschool_master_schools_v5';
   const SETTING_KEY = 'afterschool_school_subjects_setting_v5';
 
+  let currentEditId = null; // 수정 중인 데이터의 ID 보관
+
   const defaultSchoolSettings = {
     '청량초': { '피아노': '12', '영어': '8', '수학': '8', '컴퓨터': '12' },
     '창영초': { '피아노': '12', '영어': '8', '수학': '12', '컴퓨터': '8' }
   };
 
   const defaultData = [
-    { id: 1, school: '청량초', month: '2026-08', subject: '축구교실', name: '조은이', birth: '890113', material: 0, lessons: 4, grossPay: 702000, stdPay: 566514, specialTax: 0, indAccTax: 1860, incomeTax: 21060, localTax: 2100, netPay: 676980 },
-    { id: 2, school: '창영초', month: '2026-08', subject: '놀이영어(늘봄)', name: '정혜숙', birth: '781105', material: 0, lessons: 8, grossPay: 320000, stdPay: 258240, specialTax: 0, indAccTax: 850, incomeTax: 9600, localTax: 960, netPay: 308590 }
+    { id: 1, school: '청량초', month: '2026-08', subject: '축구교실', name: '조은이', birth: '890113', material: 0, lessons: 4, baseRate: 26000, isCoord: false, counts: { w4: 27 }, grossPay: 702000, stdPay: 566514, specialTax: 0, indAccTax: 1860, incomeTax: 21060, localTax: 2100, netPay: 676980 },
+    { id: 2, school: '창영초', month: '2026-08', subject: '놀이영어(늘봄)', name: '정혜숙', birth: '781105', material: 0, lessons: 8, baseRate: 40000, isCoord: false, counts: { e8: 8 }, grossPay: 320000, stdPay: 258240, specialTax: 0, indAccTax: 850, incomeTax: 9600, localTax: 960, netPay: 308590 }
   ];
 
   window.onload = function() {
@@ -278,7 +280,9 @@
     const ms = document.getElementById('modalSchool');
     const ss = document.getElementById('settingSchoolSelect');
 
+    const curSf = sf.value || '전체';
     sf.innerHTML = '<option value="전체">전체 학교</option>' + schools.map(s => `<option value="${s}">${s}</option>`).join('');
+    sf.value = curSf;
     ms.innerHTML = schools.map(s => `<option value="${s}">${s}</option>`).join('');
     ss.innerHTML = schools.map(s => `<option value="${s}">${s}</option>`).join('');
   }
@@ -344,14 +348,67 @@
     closeSettingModal();
   }
 
+  function clearAllCountInputs() {
+    for (let i = 1; i <= 4; i++) { const el = document.getElementById(`w${i}`); if (el) el.value = ''; }
+    for (let i = 1; i <= 8; i++) { const el = document.getElementById(`e${i}`); if (el) el.value = ''; }
+    for (let i = 1; i <= 12; i++) { const el = document.getElementById(`c${i}`); if (el) el.value = ''; }
+  }
+
   function openRecordModal() {
+    currentEditId = null;
+    document.getElementById('modalTitle').innerText = "강사/코디 정산 등록";
+    document.getElementById('btnSaveRecord').innerText = "저장";
+
     document.getElementById('isCoordinator').checked = false;
     document.getElementById('modalMonth').value = document.getElementById('activeMonth').value;
+    document.getElementById('birth').value = '';
+    document.getElementById('subject').value = '';
+    document.getElementById('name').value = '';
+    document.getElementById('baseRate').value = '26000';
+    document.getElementById('material').value = '0';
+    document.getElementById('displayLessons').value = '4';
+    document.getElementById('note').value = '';
+    clearAllCountInputs();
+
+    onInputCheckAutoMode();
+    document.getElementById('recordModal').style.display = 'flex';
+  }
+
+  // --- 강사명 클릭 시 수정 모달 열기 ---
+  function openEditRecordModal(id) {
+    const records = getRecords();
+    const item = records.find(r => r.id === id);
+    if (!item) return;
+
+    currentEditId = id;
+    document.getElementById('modalTitle').innerText = `[${item.name}] 정보 수정`;
+    document.getElementById('btnSaveRecord').innerText = "수정 완료";
+
+    document.getElementById('modalSchool').value = item.school;
+    document.getElementById('modalMonth').value = item.month;
+    document.getElementById('birth').value = item.birth || '';
+    document.getElementById('subject').value = item.subject || '';
+    document.getElementById('name').value = item.name || '';
+    document.getElementById('baseRate').value = item.baseRate !== undefined ? item.baseRate : item.grossPay;
+    document.getElementById('material').value = item.material || 0;
+    document.getElementById('displayLessons').value = item.lessons || 4;
+    document.getElementById('note').value = item.note || '';
+    document.getElementById('isCoordinator').checked = !!item.isCoord;
+
+    clearAllCountInputs();
+    if (item.counts) {
+      for (const [key, val] of Object.entries(item.counts)) {
+        const el = document.getElementById(key);
+        if (el) el.value = val;
+      }
+    }
+
     onInputCheckAutoMode();
     document.getElementById('recordModal').style.display = 'flex';
   }
 
   function closeRecordModal() {
+    currentEditId = null;
     document.getElementById('recordModal').style.display = 'none';
   }
 
@@ -375,7 +432,7 @@
       rateLabel.innerText = '월 기본급 (정액)';
       badge.innerText = '● 코디/관리자 모드 (기본급 입력)';
       badge.style.color = '#52c41a';
-      displayLessons.value = '20';
+      if (!currentEditId) displayLessons.value = '20';
       return;
     }
 
@@ -395,19 +452,19 @@
       rateLabel.innerText = '8회 완강 기준수수료';
       badge.innerText = `● [${currentSchool}] ${currentSubject} → 8회 세분화 모드 (n/8 환산)`;
       badge.style.color = '#fa8c16';
-      displayLessons.value = '8';
+      if (!currentEditId) displayLessons.value = '8';
     } else if (mode === '12') {
       box12.style.display = 'block';
       rateLabel.innerText = '12회 완강 기준수수료';
       badge.innerText = `● [${currentSchool}] ${currentSubject} → 12회 세분화 모드 (n/12 환산)`;
       badge.style.color = '#722ed1';
-      displayLessons.value = '12';
+      if (!currentEditId) displayLessons.value = '12';
     } else {
       box4.style.display = 'block';
       rateLabel.innerText = '4주 완강 기준수수료';
       badge.innerText = `● [${currentSchool}] ${currentSubject} → 4회 일반 모드 (n/4 환산)`;
       badge.style.color = '#1890ff';
-      displayLessons.value = '4';
+      if (!currentEditId) displayLessons.value = '4';
     }
   }
 
@@ -421,10 +478,12 @@
     const rateOrSalary = Number(document.getElementById('baseRate').value) || 0;
     const material = Number(document.getElementById('material').value) || 0;
     const displayLessons = Number(document.getElementById('displayLessons').value) || 4;
+    const note = document.getElementById('note').value;
 
     if (!name.trim()) return alert('강사명을 입력하세요.');
 
     let grossPay = 0;
+    const counts = {};
     const is8 = (document.getElementById('boxDetailed8').style.display !== 'none');
     const is12 = (document.getElementById('boxDetailed12').style.display !== 'none');
 
@@ -434,6 +493,7 @@
       let weightedSum = 0;
       for (let i = 1; i <= 8; i++) {
         const count = Number(document.getElementById(`e${i}`).value) || 0;
+        counts[`e${i}`] = count;
         if (count > 0) weightedSum += count * (i / 8);
       }
       grossPay = Math.round(weightedSum * rateOrSalary) + material;
@@ -441,15 +501,18 @@
       let weightedSum = 0;
       for (let i = 1; i <= 12; i++) {
         const count = Number(document.getElementById(`c${i}`).value) || 0;
+        counts[`c${i}`] = count;
         if (count > 0) weightedSum += count * (i / 12);
       }
       grossPay = Math.round(weightedSum * rateOrSalary) + material;
     } else {
-      const w4 = (Number(document.getElementById('w4').value) || 0) * 1.0;
-      const w3 = (Number(document.getElementById('w3').value) || 0) * 0.75;
-      const w2 = (Number(document.getElementById('w2').value) || 0) * 0.5;
-      const w1 = (Number(document.getElementById('w1').value) || 0) * 0.25;
-      grossPay = Math.round((w4 + w3 + w2 + w1) * rateOrSalary) + material;
+      const w4 = (Number(document.getElementById('w4').value) || 0);
+      const w3 = (Number(document.getElementById('w3').value) || 0);
+      const w2 = (Number(document.getElementById('w2').value) || 0);
+      const w1 = (Number(document.getElementById('w1').value) || 0);
+      counts.w4 = w4; counts.w3 = w3; counts.w2 = w2; counts.w1 = w1;
+
+      grossPay = Math.round((w4 * 1.0 + w3 * 0.75 + w2 * 0.5 + w1 * 0.25) * rateOrSalary) + material;
     }
 
     const stdPay = Math.round(grossPay * 0.80693);
@@ -462,11 +525,29 @@
     const netPay = grossPay - (specialTax + indAccTax + incomeTax + localTax);
 
     const records = getRecords();
-    records.push({
-      id: Date.now(),
-      school, month, subject, name, birth, material, lessons: displayLessons,
-      grossPay, stdPay, specialTax, indAccTax, incomeTax, localTax, netPay
-    });
+
+    if (currentEditId) {
+      // 수정 모드
+      const idx = records.findIndex(r => r.id === currentEditId);
+      if (idx !== -1) {
+        records[idx] = {
+          ...records[idx],
+          school, month, subject, name, birth, material, lessons: displayLessons,
+          baseRate: rateOrSalary, isCoord, counts, note,
+          grossPay, stdPay, specialTax, indAccTax, incomeTax, localTax, netPay
+        };
+      }
+      alert(`[${name}] 강사님 정보가 수정되었습니다.`);
+    } else {
+      // 신규 등록
+      records.push({
+        id: Date.now(),
+        school, month, subject, name, birth, material, lessons: displayLessons,
+        baseRate: rateOrSalary, isCoord, counts, note,
+        grossPay, stdPay, specialTax, indAccTax, incomeTax, localTax, netPay
+      });
+      alert(`[${name}] 강사님이 등록되었습니다.`);
+    }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
     closeRecordModal();
@@ -495,7 +576,7 @@
       row.innerHTML = `
         <td>${item.school}</td>
         <td>${item.subject}</td>
-        <td><span class="name-link" onclick="printPayslip(${item.id})">${item.name}</span></td>
+        <td><span class="name-link" onclick="openEditRecordModal(${item.id})" title="클릭하여 수정">${item.name}</span></td>
         <td class="money-col detail-col">${item.material.toLocaleString()}</td>
         <td class="detail-col">${item.lessons}</td>
         <td class="money-col" style="font-weight:bold;">${item.grossPay.toLocaleString()}</td>
@@ -507,7 +588,8 @@
         <td class="money-col highlight-blue">${item.netPay.toLocaleString()}</td>
         <td>
           <button class="btn-kakao" onclick="copyKakaoSlip(${item.id})">카톡 복사</button>
-          <button style="border:none; background:none; color:red; cursor:pointer; font-size:11px;" onclick="deleteItem(${item.id})">삭제</button>
+          <button style="border:none; background:none; color:#1890ff; cursor:pointer; font-size:11px; margin-left:4px;" onclick="printPayslip(${item.id})">인쇄</button>
+          <button style="border:none; background:none; color:red; cursor:pointer; font-size:11px; margin-left:4px;" onclick="deleteItem(${item.id})">삭제</button>
         </td>
       `;
       tbody.appendChild(row);
@@ -517,36 +599,52 @@
       `전체 ${filtered.length}명, 총 지급계 ₩${totalSum.toLocaleString()}`;
   }
 
-  // --- 무료 카카오톡 명세서 복사 기능 ---
+  // --- 온라인 view.html 링크가 포함된 카카오톡 복사 기능 ---
   function copyKakaoSlip(id) {
     const item = getRecords().find(r => r.id === id);
     if (!item) return;
 
+    // view.html로 안전하게 전달할 데이터 암호화(Base64)
+    const payload = JSON.stringify({
+      school: item.school,
+      month: item.month,
+      subject: item.subject,
+      name: item.name,
+      birth: item.birth,
+      material: item.material,
+      lessons: item.lessons,
+      grossPay: item.grossPay,
+      stdPay: item.stdPay,
+      specialTax: item.specialTax,
+      indAccTax: item.indAccTax,
+      incomeTax: item.incomeTax,
+      localTax: item.localTax,
+      netPay: item.netPay
+    });
+    const encodedData = encodeURIComponent(btoa(unescape(encodeURIComponent(payload))));
+
+    // 현재 도메인 기준 view.html 전체 링크 생성
+    const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+    const viewUrl = `${baseUrl}/view.html?data=${encodedData}`;
+
     const text = 
-`[${item.month} 방과후 강사료 지급명세]
+`[${item.month} 방과후 강사료 지급명세 안내]
 - 근무처: ${item.school}
 - 과목명: ${item.subject}
 - 강사명: ${item.name} 선생님
 
-■ 지급 내역
-- 지급계(수수료): ${item.grossPay.toLocaleString()}원
-- 재료비: ${item.material.toLocaleString()}원
+■ 실 지급액(차인지급액): ${item.netPay.toLocaleString()}원
 
-■ 공제 내역
-- 사업소득세(3%): ${item.incomeTax.toLocaleString()}원
-- 주민세(0.3%): ${item.localTax.toLocaleString()}원
-- 특고 고용보험: ${item.specialTax.toLocaleString()}원
-- 산재보험료: ${item.indAccTax.toLocaleString()}원
-- 공제합계: ${(item.incomeTax + item.localTax + item.specialTax + item.indAccTax).toLocaleString()}원
+▶ 상세 급여명세서 확인하기:
+${viewUrl}
+(※ 본인확인을 위해 생년월일 6자리를 입력해 주세요.)
 
-★ 차인지급액(실수령액): ${item.netPay.toLocaleString()}원
-
-노고에 진심으로 감사드립니다.`;
+항상 열정으로 함께해 주셔서 감사드립니다.`;
 
     navigator.clipboard.writeText(text).then(() => {
-      alert(`[${item.name}] 강사님의 명세서 내용이 복사되었습니다!\n\n카카오톡 채팅창에 '붙여넣기(Ctrl + V)' 하시면 바로 전송됩니다.`);
+      alert(`[${item.name}] 선생님의 명세서 링크가 포함된 안내문이 복사되었습니다!\n\n카카오톡에 바로 붙여넣기(Ctrl + V) 하시면 됩니다.`);
     }).catch(() => {
-      prompt('아래 텍스트를 복사하여 카카오톡에 붙여넣으세요:', text);
+      prompt('아래 내용을 복사하여 카카오톡에 붙여넣으세요:', text);
     });
   }
 
