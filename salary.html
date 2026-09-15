@@ -132,13 +132,13 @@
 
 <!-- 학교별 과목 설정 모달 -->
 <div class="modal-overlay" id="settingModal">
-  <div class="modal-content" style="width: 700px;">
+  <div class="modal-content" style="width: 680px;">
     <div class="modal-top">
       <h2>학교별 8회 / 12회 세분화 과목 설정</h2>
       <button class="close-icon" onclick="closeSettingModal()">&times;</button>
     </div>
     <div>
-      <label style="font-size: 13px; font-weight: bold;">설정할 학교 선택:</label>
+      <label style="font-size: 13px; font-weight: bold;">설정할 학교 선택 (가나다순):</label>
       <select id="settingSchoolSelect" onchange="loadSchoolSettings()" style="width: 100%; height: 34px; padding: 0 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-weight: bold; margin-top: 6px;"></select>
     </div>
     <table class="setting-table">
@@ -146,9 +146,9 @@
         <tr><th>과목명</th><th>일반 (4회)</th><th>8회 세분화</th><th>12회 세분화</th></tr>
       </thead>
       <tbody>
-        <tr><td><strong>피아노1</strong></td><td><input type="radio" name="set_piano1" value="4"></td><td><input type="radio" name="set_piano1" value="8" checked></td><td><input type="radio" name="set_piano1" value="12"></td></tr>
-        <tr><td><strong>피아노2</strong></td><td><input type="radio" name="set_piano2" value="4"></td><td><input type="radio" name="set_piano2" value="8"></td><td><input type="radio" name="set_piano2" value="12" checked></td></tr>
+        <tr><td><strong>피아노</strong></td><td><input type="radio" name="set_piano" value="4"></td><td><input type="radio" name="set_piano" value="8"></td><td><input type="radio" name="set_piano" value="12" checked></td></tr>
         <tr><td><strong>영어</strong></td><td><input type="radio" name="set_english" value="4"></td><td><input type="radio" name="set_english" value="8" checked></td><td><input type="radio" name="set_english" value="12"></td></tr>
+        <tr><td><strong>영어2</strong></td><td><input type="radio" name="set_english2" value="4"></td><td><input type="radio" name="set_english2" value="8"></td><td><input type="radio" name="set_english2" value="12" checked></td></tr>
         <tr><td><strong>수학</strong></td><td><input type="radio" name="set_math" value="4"></td><td><input type="radio" name="set_math" value="8" checked></td><td><input type="radio" name="set_math" value="12"></td></tr>
         <tr><td><strong>컴퓨터</strong></td><td><input type="radio" name="set_computer" value="4"></td><td><input type="radio" name="set_computer" value="8"></td><td><input type="radio" name="set_computer" value="12" checked></td></tr>
       </tbody>
@@ -187,7 +187,7 @@
       </div>
       <div class="input-item">
         <label>생년월일</label>
-        <input type="text" id="birth" placeholder="예: 890113">
+        <input type="text" id="birth" placeholder="예: 123456">
       </div>
     </div>
 
@@ -208,51 +208,48 @@
 
     <div id="modeStatusBadge" style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#1890ff;"></div>
 
-    <!-- 4회 모드 -->
     <div id="boxGeneral4" class="grid-wrap">
       <div class="grid-4w">
-        <div class="cell-item"><label>4회(완강)</label><input type="number" id="w4" value="27" placeholder="0" oninput="autoSetLessons(4)"></div>
-        <div class="cell-item"><label>3회</label><input type="number" id="w3" placeholder="0" oninput="autoSetLessons(4)"></div>
-        <div class="cell-item"><label>2회</label><input type="number" id="w2" placeholder="0" oninput="autoSetLessons(4)"></div>
-        <div class="cell-item"><label>1회</label><input type="number" id="w1" placeholder="0" oninput="autoSetLessons(4)"></div>
+        <div class="cell-item"><label>4회(완강)</label><input type="number" id="w4" value="27" placeholder="0"></div>
+        <div class="cell-item"><label>3회</label><input type="number" id="w3" placeholder="0"></div>
+        <div class="cell-item"><label>2회</label><input type="number" id="w2" placeholder="0"></div>
+        <div class="cell-item"><label>1회</label><input type="number" id="w1" placeholder="0"></div>
       </div>
     </div>
 
-    <!-- 8회 세분화 모드 -->
     <div id="boxDetailed8" class="grid-wrap" style="display:none;">
       <div class="grid-8w">
-        <div class="cell-item"><label>8회(완강)</label><input type="number" id="e8" placeholder="0" oninput="autoSetLessons(8)"></div>
-        <div class="cell-item"><label>7회</label><input type="number" id="e7" placeholder="0" oninput="autoSetLessons(8)"></div>
-        <div class="cell-item"><label>6회</label><input type="number" id="e6" placeholder="0" oninput="autoSetLessons(8)"></div>
-        <div class="cell-item"><label>5회</label><input type="number" id="e5" placeholder="0" oninput="autoSetLessons(8)"></div>
-        <div class="cell-item"><label>4회</label><input type="number" id="e4" placeholder="0" oninput="autoSetLessons(8)"></div>
-        <div class="cell-item"><label>3회</label><input type="number" id="e3" placeholder="0" oninput="autoSetLessons(8)"></div>
-        <div class="cell-item"><label>2회</label><input type="number" id="e2" placeholder="0" oninput="autoSetLessons(8)"></div>
-        <div class="cell-item"><label>1회</label><input type="number" id="e1" placeholder="0" oninput="autoSetLessons(8)"></div>
+        <div class="cell-item"><label>8회(완강)</label><input type="number" id="e8" placeholder="0"></div>
+        <div class="cell-item"><label>7회</label><input type="number" id="e7" placeholder="0"></div>
+        <div class="cell-item"><label>6회</label><input type="number" id="e6" placeholder="0"></div>
+        <div class="cell-item"><label>5회</label><input type="number" id="e5" placeholder="0"></div>
+        <div class="cell-item"><label>4회</label><input type="number" id="e4" placeholder="0"></div>
+        <div class="cell-item"><label>3회</label><input type="number" id="e3" placeholder="0"></div>
+        <div class="cell-item"><label>2회</label><input type="number" id="e2" placeholder="0"></div>
+        <div class="cell-item"><label>1회</label><input type="number" id="e1" placeholder="0"></div>
       </div>
     </div>
 
-    <!-- 12회 세분화 모드 -->
     <div id="boxDetailed12" class="grid-wrap" style="display:none;">
       <div class="grid-12w">
-        <div class="cell-item"><label>12회(완강)</label><input type="number" id="c12" placeholder="0" oninput="autoSetLessons(12)"></div>
-        <div class="cell-item"><label>11회</label><input type="number" id="c11" placeholder="0" oninput="autoSetLessons(12)"></div>
-        <div class="cell-item"><label>10회</label><input type="number" id="c10" placeholder="0" oninput="autoSetLessons(12)"></div>
-        <div class="cell-item"><label>9회</label><input type="number" id="c9" placeholder="0" oninput="autoSetLessons(12)"></div>
-        <div class="cell-item"><label>8회</label><input type="number" id="c8" placeholder="0" oninput="autoSetLessons(12)"></div>
-        <div class="cell-item"><label>7회</label><input type="number" id="c7" placeholder="0" oninput="autoSetLessons(12)"></div>
-        <div class="cell-item"><label>6회</label><input type="number" id="c6" placeholder="0" oninput="autoSetLessons(12)"></div>
-        <div class="cell-item"><label>5회</label><input type="number" id="c5" placeholder="0" oninput="autoSetLessons(12)"></div>
-        <div class="cell-item"><label>4회</label><input type="number" id="c4" placeholder="0" oninput="autoSetLessons(12)"></div>
-        <div class="cell-item"><label>3회</label><input type="number" id="c3" placeholder="0" oninput="autoSetLessons(12)"></div>
-        <div class="cell-item"><label>2회</label><input type="number" id="c2" placeholder="0" oninput="autoSetLessons(12)"></div>
-        <div class="cell-item"><label>1회</label><input type="number" id="c1" placeholder="0" oninput="autoSetLessons(12)"></div>
+        <div class="cell-item"><label>12회(완강)</label><input type="number" id="c12" placeholder="0"></div>
+        <div class="cell-item"><label>11회</label><input type="number" id="c11" placeholder="0"></div>
+        <div class="cell-item"><label>10회</label><input type="number" id="c10" placeholder="0"></div>
+        <div class="cell-item"><label>9회</label><input type="number" id="c9" placeholder="0"></div>
+        <div class="cell-item"><label>8회</label><input type="number" id="c8" placeholder="0"></div>
+        <div class="cell-item"><label>7회</label><input type="number" id="c7" placeholder="0"></div>
+        <div class="cell-item"><label>6회</label><input type="number" id="c6" placeholder="0"></div>
+        <div class="cell-item"><label>5회</label><input type="number" id="c5" placeholder="0"></div>
+        <div class="cell-item"><label>4회</label><input type="number" id="c4" placeholder="0"></div>
+        <div class="cell-item"><label>3회</label><input type="number" id="c3" placeholder="0"></div>
+        <div class="cell-item"><label>2회</label><input type="number" id="c2" placeholder="0"></div>
+        <div class="cell-item"><label>1회</label><input type="number" id="c1" placeholder="0"></div>
       </div>
     </div>
 
     <div class="row-grid-3">
       <div class="input-item"><label>재료비 지원금</label><input type="number" id="material" placeholder="0"></div>
-      <div class="input-item"><label id="lessonsLabel" style="font-weight:bold; color:#1890ff;">수업차시(자동입력)</label><input type="number" id="displayLessons" value="4"></div>
+      <div class="input-item"><label id="lessonsLabel">수업차시(표시용)</label><input type="number" id="displayLessons" value="4"></div>
       <div class="input-item"><label>비고</label><input type="text" id="note" placeholder="특이사항"></div>
     </div>
 
@@ -272,10 +269,10 @@
 
   let currentEditId = null;
 
-  // 기본 학교별 회차 설정 (피아노1: 8회, 피아노2: 12회 반영)
+  // 기본 설정에 영어2 12회 반영
   const defaultSchoolSettings = {
-    '청량초': { '피아노1': '8', '피아노2': '12', '영어': '8', '수학': '8', '컴퓨터': '12' },
-    '창영초': { '피아노1': '8', '피아노2': '12', '영어': '8', '수학': '12', '컴퓨터': '8' }
+    '청량초': { '피아노': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터': '12' },
+    '창영초': { '피아노': '12', '영어': '8', '영어2': '12', '수학': '12', '컴퓨터': '8' }
   };
 
   const defaultData = [
@@ -285,7 +282,7 @@
 
   window.onload = function() {
     if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-    if (!localStorage.getItem(SCHOOL_KEY)) localStorage.setItem(SCHOOL_KEY, JSON.stringify(['청량초', '창영초']));
+    if (!localStorage.getItem(SCHOOL_KEY)) localStorage.setItem(SCHOOL_KEY, JSON.stringify(['창영초', '청량초']));
     if (!localStorage.getItem(SETTING_KEY)) localStorage.setItem(SETTING_KEY, JSON.stringify(defaultSchoolSettings));
     
     initSchoolDropdowns();
@@ -293,11 +290,17 @@
   };
 
   function getRecords() { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  function getSchools() { return JSON.parse(localStorage.getItem(SCHOOL_KEY)) || ['청량초', '창영초']; }
+  
+  // 학교 목록을 항상 가나다순(오름차순)으로 반환
+  function getSchools() { 
+    const schools = JSON.parse(localStorage.getItem(SCHOOL_KEY)) || ['창영초', '청량초'];
+    return schools.sort((a, b) => a.localeCompare(b, 'ko'));
+  }
+  
   function getSettings() { return JSON.parse(localStorage.getItem(SETTING_KEY)) || {}; }
 
   function initSchoolDropdowns() {
-    const schools = getSchools();
+    const schools = getSchools(); // 가나다순 정렬된 목록
     const sf = document.getElementById('schoolFilter');
     const ms = document.getElementById('modalSchool');
     const ss = document.getElementById('settingSchoolSelect');
@@ -315,10 +318,11 @@
     const schools = getSchools();
     if (schools.includes(s.trim())) return alert('이미 존재하는 학교입니다.');
     schools.push(s.trim());
+    schools.sort((a, b) => a.localeCompare(b, 'ko'));
     localStorage.setItem(SCHOOL_KEY, JSON.stringify(schools));
     
     const settings = getSettings();
-    settings[s.trim()] = { '피아노1': '8', '피아노2': '12', '영어': '8', '수학': '8', '컴퓨터': '12' };
+    settings[s.trim()] = { '피아노': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터': '12' };
     localStorage.setItem(SETTING_KEY, JSON.stringify(settings));
 
     initSchoolDropdowns();
@@ -338,11 +342,11 @@
   function loadSchoolSettings() {
     const targetSchool = document.getElementById('settingSchoolSelect').value;
     const settings = getSettings();
-    const map = settings[targetSchool] || { '피아노1': '8', '피아노2': '12', '영어': '8', '수학': '8', '컴퓨터': '12' };
+    const map = settings[targetSchool] || { '피아노': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터': '12' };
 
-    setRadioVal('set_piano1', map['피아노1'] || '8');
-    setRadioVal('set_piano2', map['피아노2'] || '12');
+    setRadioVal('set_piano', map['피아노'] || '12');
     setRadioVal('set_english', map['영어'] || '8');
+    setRadioVal('set_english2', map['영어2'] || '12');
     setRadioVal('set_math', map['수학'] || '8');
     setRadioVal('set_computer', map['컴퓨터'] || '12');
   }
@@ -361,9 +365,9 @@
     const targetSchool = document.getElementById('settingSchoolSelect').value;
     const settings = getSettings();
     settings[targetSchool] = {
-      '피아노1': getRadioVal('set_piano1'),
-      '피아노2': getRadioVal('set_piano2'),
+      '피아노': getRadioVal('set_piano'),
       '영어': getRadioVal('set_english'),
+      '영어2': getRadioVal('set_english2'),
       '수학': getRadioVal('set_math'),
       '컴퓨터': getRadioVal('set_computer')
     };
@@ -376,14 +380,6 @@
     for (let i = 1; i <= 4; i++) { const el = document.getElementById(`w${i}`); if (el) el.value = ''; }
     for (let i = 1; i <= 8; i++) { const el = document.getElementById(`e${i}`); if (el) el.value = ''; }
     for (let i = 1; i <= 12; i++) { const el = document.getElementById(`c${i}`); if (el) el.value = ''; }
-  }
-
-  // 인원수 칸에 숫자가 입력되면 수업차시에 완강 기준 회차(4, 8, 12)를 자동 입력
-  function autoSetLessons(lessons) {
-    const category = getRadioVal('calcCategory');
-    if (category === '방과후') {
-      document.getElementById('displayLessons').value = lessons;
-    }
   }
 
   function openRecordModal() {
@@ -464,7 +460,7 @@
 
     subjectLabel.innerText = "과목명";
     nameLabel.innerText = "강사명";
-    lessonsLabel.innerText = "수업차시(자동입력)";
+    lessonsLabel.innerText = "수업차시(표시용)";
 
     if (category === '맞춤형') {
       rateLabel.innerText = '시간(차시)당 단가';
@@ -490,23 +486,15 @@
       return;
     }
 
-    // 방과후프로그램 모드 판단
+    // 방과후프로그램 모드: '영어2'를 '영어'보다 먼저 판별
     const settings = getSettings();
     const schoolMap = settings[currentSchool] || {};
     
     let mode = '4';
-
-    // 피아노1, 피아노2 우선 판정
-    if (currentSubject.includes('피아노1')) {
-      mode = schoolMap['피아노1'] || '8';
-    } else if (currentSubject.includes('피아노2')) {
-      mode = schoolMap['피아노2'] || '12';
-    } else {
-      for (const key of ['피아노', '영어', '수학', '컴퓨터']) {
-        if (currentSubject.includes(key)) {
-          mode = schoolMap[key] || (key === '컴퓨터' ? '12' : '8');
-          break;
-        }
+    for (const key of ['영어2', '피아노', '영어', '수학', '컴퓨터']) {
+      if (currentSubject.includes(key)) {
+        mode = schoolMap[key] || (key === '영어2' ? '12' : '4');
+        break;
       }
     }
 
@@ -702,8 +690,8 @@
 
     alert(
       "✅ [data.js] 파일이 다운로드되었습니다!\n\n" +
-      "이 파일을 GitHub 저장소에 'Upload files'로 올려주시면(덮어쓰기),\n" +
-      "공통 링크(view.html)에 즉시 최신 내용이 반영됩니다."
+      "이 파일을 GitHub 저장소에 다시 올려주시면(덮어쓰기),\n" +
+      "온라인 명세서에 최신 데이터가 반영됩니다."
     );
   }
 
