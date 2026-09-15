@@ -10,7 +10,6 @@
   <meta property="og:site_name" content="(주)밝은생각">
   <meta property="og:title" content="(주)밝은생각 급여명세서 조회">
   <meta property="og:description" content="성명과 생년월일(6자리)을 입력하여 이번 달 명세서를 확인하세요.">
-  <!-- 신뢰감을 주는 고화질 급여·정산 문서 대표 이미지 -->
   <meta property="og:image" content="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80">
   <meta property="og:image:width" content="800">
   <meta property="og:image:height" content="533">
@@ -94,13 +93,11 @@
     <div class="auth-title">급여 지급명세서 조회</div>
     <div class="auth-desc">개인정보 보호를 위해 본인 확인 정보를 입력해 주세요.</div>
     
-    <!-- 성명: placeholder 공란 -->
     <div class="auth-input-wrap">
       <label for="nameInput">성 명</label>
       <input type="text" id="nameInput" class="auth-input" placeholder="">
     </div>
 
-    <!-- 주민번호 앞자리: 예: 123456 -->
     <div class="auth-input-wrap">
       <label for="birthInput">생년월일 (주민번호 앞 6자리)</label>
       <input type="password" id="birthInput" class="auth-input" placeholder="예: 123456" maxlength="6" inputmode="numeric">
@@ -126,12 +123,19 @@
         <th>성 명</th>
         <td id="infoName">-</td>
       </tr>
-      <tr>
+      <!-- 방과후/맞춤형: 구분 + 과목명 표시 -->
+      <tr id="rowWithSubject">
         <th>구 분</th>
         <td id="infoCategory">방과후프로그램</td>
         <th>과목명</th>
         <td id="infoSubject">-</td>
       </tr>
+      <!-- 코디/안전관리자: 과목명 빼고 구분만 표시 -->
+      <tr id="rowWithoutSubject" style="display:none;">
+        <th>구 분</th>
+        <td colspan="3" id="infoCategoryOnly">-</td>
+      </tr>
+      <!-- 강사 전용 수업차시 행 (코디는 숨김) -->
       <tr id="rowLessons">
         <th>수업차시</th>
         <td colspan="3" id="infoLessons">-</td>
@@ -259,24 +263,36 @@
 
     document.getElementById('infoSchool').innerText = d.school || '-';
     document.getElementById('infoName').innerText = d.name || '-';
-    document.getElementById('infoCategory').innerText = fullCategoryName;
-    document.getElementById('infoSubject').innerText = d.subject || '-';
 
     const isFixedStaff = (rawCat === '코디' || rawCat === '안전관리자' || d.subject === '코디' || d.subject === '안전관리자');
 
+    // 과목명 및 구분 행 분기 처리
+    const rowWithSubject = document.getElementById('rowWithSubject');
+    const rowWithoutSubject = document.getElementById('rowWithoutSubject');
     const rowLessons = document.getElementById('rowLessons');
+
     if (isFixedStaff) {
-      rowLessons.style.display = 'none';
+      // 코디/안전관리자: 과목명 행 숨기고, 구분만 단독 표시
+      rowWithSubject.style.display = 'none';
+      rowWithoutSubject.style.display = '';
+      document.getElementById('infoCategoryOnly').innerText = fullCategoryName;
+      rowLessons.style.display = 'none'; // 수업차시 숨김
     } else {
+      // 강사: 구분 + 과목명 정상 표시
+      rowWithSubject.style.display = '';
+      rowWithoutSubject.style.display = 'none';
+      document.getElementById('infoCategory').innerText = fullCategoryName;
+      document.getElementById('infoSubject').innerText = d.subject || '-';
       rowLessons.style.display = '';
       document.getElementById('infoLessons').innerText = (d.lessons || 0) + '차시';
     }
 
+    // 차수별 수강인원 현황 처리 (방과후프로그램 전용)
     const boxCounts = document.getElementById('boxCounts');
     const countsGrid = document.getElementById('countsGrid');
     countsGrid.innerHTML = '';
 
-    if (d.counts && Object.keys(d.counts).length > 0) {
+    if (!isFixedStaff && d.counts && Object.keys(d.counts).length > 0) {
       let totalStudents = 0;
       let countChips = [];
 
@@ -310,6 +326,7 @@
       boxCounts.style.display = 'none';
     }
 
+    // 재료비 행 처리 (코디 숨김)
     const rowMaterial = document.getElementById('rowMaterial');
     const rowTaxOnly1 = document.getElementById('rowTaxOnly1');
     const titleGrossPay = document.getElementById('titleGrossPay');
