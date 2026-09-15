@@ -1,0 +1,53 @@
+window.PAYROLL_PUBLIC_DATA = [
+  {
+    "school": "청량초",
+    "category": "방과후",
+    "month": "2026-08",
+    "subject": "축구교실",
+    "name": "조은이",
+    "birth": "890113",
+    "material": 0,
+    "lessons": 4,
+    "grossPay": 702000,
+    "stdPay": 566514,
+    "specialTax": 0,
+    "indAccTax": 1860,
+    "incomeTax": 21060,
+    "localTax": 2100,
+    "netPay": 676980
+  },
+  {
+    "school": "창영초",
+    "category": "방과후",
+    "month": "2026-08",
+    "subject": "놀이영어(늘봄)",
+    "name": "정혜숙",
+    "birth": "781105",
+    "material": 0,
+    "lessons": 8,
+    "grossPay": 320000,
+    "stdPay": 258240,
+    "specialTax": 0,
+    "indAccTax": 850,
+    "incomeTax": 9600,
+    "localTax": 960,
+    "netPay": 308590
+  },
+  {
+    "school": "청량초",
+    "category": "방과후",
+    "month": "2026-08",
+    "subject": "코디",
+    "name": "임라영",
+    "birth": "820901",
+    "material": 0,
+    "lessons": 20,
+    "grossPay": 1000000,
+    "stdPay": 806930,
+    "specialTax": 8700,
+    "indAccTax": 2650,
+    "incomeTax": 30000,
+    "localTax": 3000,
+    "netPay": 955650
+  }
+];
