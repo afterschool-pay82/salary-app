@@ -6,7 +6,7 @@
   <style>
     * { box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", helvetica, sans-serif; background: #eef1f5; margin: 0; padding: 20px; color: #333; }
-    .main-wrapper { max-width: 1520px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .main-wrapper { max-width: 1540px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
     
     .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .title-area { display: flex; align-items: center; gap: 12px; }
@@ -37,6 +37,12 @@
     .cat-맞춤형 { background: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
     .cat-코디 { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
     .cat-안전관리자 { background: #f9f0ff; color: #722ed1; border: 1px solid #d3adf7; }
+
+    /* 버튼 스타일 */
+    .btn-link-copy { border: 1px solid #d9d9d9; background: #fafafa; color: #333; padding: 4px 7px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; }
+    .btn-link-copy:hover { background: #f0f0f0; border-color: #bfbfbf; }
+    .btn-print { border: 1px solid #d9d9d9; background: #fff; color: #1890ff; padding: 4px 7px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; margin-left: 3px; }
+    .btn-del { border: 1px solid #ffa39e; background: #fff1f0; color: #f5222d; padding: 4px 7px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; margin-left: 3px; }
 
     /* 모달 공통 */
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 1000; justify-content: center; align-items: center; }
@@ -113,7 +119,7 @@
         <th rowspan="2" class="detail-col">산재<br>보험료</th>
         <th colspan="2" class="detail-col">공제액</th>
         <th rowspan="2">실지급액</th>
-        <th rowspan="2">관리</th>
+        <th rowspan="2">발송 및 관리</th>
       </tr>
       <tr class="detail-col">
         <th>소득세</th>
@@ -389,7 +395,7 @@
     document.getElementById('recordModal').style.display = 'flex';
   }
 
-  // --- 강사명 클릭 시 정보 수정 모달 열기 ---
+  // 강사명 클릭 시 수정 모달 열기
   function openEditRecordModal(id) {
     const records = getRecords();
     const item = records.find(r => r.id === id);
@@ -427,7 +433,6 @@
     document.getElementById('recordModal').style.display = 'none';
   }
 
-  // 구분 및 과목 변경 시 입력창 형태/라벨 자동 전환
   function onChangeCategory() {
     const category = getRadioVal('calcCategory');
     const currentSchool = document.getElementById('modalSchool').value;
@@ -528,13 +533,10 @@
     const is12 = (document.getElementById('boxDetailed12').style.display !== 'none');
 
     if (category === '맞춤형') {
-      // 맞춤형 프로그램: 단가 * 수업차시 + 재료비
       grossPay = Math.round(rateOrSalary * displayLessons) + material;
     } else if (category === '코디' || category === '안전관리자') {
-      // 기본급 정액 정산
       grossPay = rateOrSalary + material;
     } else if (is8) {
-      // 방과후 8회 세분화
       let weightedSum = 0;
       for (let i = 1; i <= 8; i++) {
         const count = Number(document.getElementById(`e${i}`).value) || 0;
@@ -543,7 +545,6 @@
       }
       grossPay = Math.round(weightedSum * rateOrSalary) + material;
     } else if (is12) {
-      // 방과후 12회 세분화
       let weightedSum = 0;
       for (let i = 1; i <= 12; i++) {
         const count = Number(document.getElementById(`c${i}`).value) || 0;
@@ -552,7 +553,6 @@
       }
       grossPay = Math.round(weightedSum * rateOrSalary) + material;
     } else {
-      // 방과후 4회 일반
       const w4 = (Number(document.getElementById('w4').value) || 0);
       const w3 = (Number(document.getElementById('w3').value) || 0);
       const w2 = (Number(document.getElementById('w2').value) || 0);
@@ -574,7 +574,6 @@
     const records = getRecords();
 
     if (currentEditId) {
-      // 수정
       const idx = records.findIndex(r => r.id === currentEditId);
       if (idx !== -1) {
         records[idx] = {
@@ -586,7 +585,6 @@
       }
       alert(`[${name}] 님의 정보가 수정되었습니다.`);
     } else {
-      // 신규 등록
       records.push({
         id: Date.now(),
         school, category, month, subject, name, birth, material, lessons: displayLessons,
@@ -636,8 +634,9 @@
         <td class="money-col detail-col">${item.localTax.toLocaleString()}</td>
         <td class="money-col highlight-blue">${item.netPay.toLocaleString()}</td>
         <td>
-          <button style="border: 1px solid #d9d9d9; background: #fff; color: #1890ff; padding: 4px 8px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold;" onclick="printPayslip(${item.id})">인쇄</button>
-          <button style="border: 1px solid #ffa39e; background: #fff1f0; color: #f5222d; padding: 4px 8px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; margin-left: 4px;" onclick="deleteItem(${item.id})">삭제</button>
+          <button class="btn-link-copy" onclick="copyViewLink(${item.id})" title="온라인 명세서 URL 복사">링크 복사</button>
+          <button class="btn-print" onclick="printPayslip(${item.id})">인쇄</button>
+          <button class="btn-del" onclick="deleteItem(${item.id})">삭제</button>
         </td>
       `;
       tbody.appendChild(row);
@@ -645,6 +644,40 @@
 
     document.getElementById('summaryCounter').innerText = 
       `전체 ${filtered.length}명, 총 지급계 ₩${totalSum.toLocaleString()}`;
+  }
+
+  // --- 온라인 명세서 URL 복사 기능 ---
+  function copyViewLink(id) {
+    const item = getRecords().find(r => r.id === id);
+    if (!item) return;
+
+    const payload = JSON.stringify({
+      school: item.school,
+      category: item.category || '방과후',
+      month: item.month,
+      subject: item.subject,
+      name: item.name,
+      birth: item.birth,
+      material: item.material,
+      lessons: item.lessons,
+      grossPay: item.grossPay,
+      stdPay: item.stdPay,
+      specialTax: item.specialTax,
+      indAccTax: item.indAccTax,
+      incomeTax: item.incomeTax,
+      localTax: item.localTax,
+      netPay: item.netPay
+    });
+
+    const encodedData = encodeURIComponent(btoa(unescape(encodeURIComponent(payload))));
+    const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+    const viewUrl = `${baseUrl}/view.html?data=${encodedData}`;
+
+    navigator.clipboard.writeText(viewUrl).then(() => {
+      alert(`[${item.name}] 님의 온라인 명세서 링크가 복사되었습니다!\n\n문자나 메신저에 붙여넣기(Ctrl + V)하여 전달하시면 됩니다.\n\n주소: ${viewUrl}`);
+    }).catch(() => {
+      prompt('아래 명세서 링크를 복사하세요:', viewUrl);
+    });
   }
 
   function toggleColumns() {
