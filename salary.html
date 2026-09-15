@@ -6,7 +6,7 @@
   <style>
     * { box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", helvetica, sans-serif; background: #eef1f5; margin: 0; padding: 20px; color: #333; }
-    .main-wrapper { max-width: 1460px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .main-wrapper { max-width: 1520px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
     
     .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .title-area { display: flex; align-items: center; gap: 12px; }
@@ -32,12 +32,21 @@
     .highlight-blue { color: #1890ff; font-weight: bold; }
     .name-link { font-weight: bold; cursor: pointer; color: #1890ff; text-decoration: underline; }
     
+    .badge-cat { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .cat-방과후 { background: #e6f7ff; color: #1890ff; border: 1px solid #91d5ff; }
+    .cat-맞춤형 { background: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
+    .cat-코디 { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
+    .cat-안전관리자 { background: #f9f0ff; color: #722ed1; border: 1px solid #d3adf7; }
+
     /* 모달 공통 */
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 1000; justify-content: center; align-items: center; }
     .modal-content { background: #fff; width: 940px; border-radius: 8px; padding: 24px 28px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); max-height: 94vh; overflow-y: auto; }
     .modal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; }
     .close-icon { font-size: 20px; cursor: pointer; border: none; background: none; color: #999; }
     
+    .type-selector-bar { display: flex; align-items: center; gap: 16px; background: #f0f5ff; padding: 10px 14px; border-radius: 6px; border: 1px solid #adc6ff; margin-bottom: 14px; font-size: 13px; font-weight: bold; }
+    .type-selector-bar label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: #1d39c4; }
+
     .row-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 20px; row-gap: 12px; margin-bottom: 14px; }
     .input-item { display: flex; align-items: center; justify-content: space-between; }
     .input-item label { font-size: 13px; color: #333; width: 110px; flex-shrink: 0; }
@@ -78,7 +87,7 @@
 
   <div class="action-bar">
     <select id="schoolFilter" class="school-filter" onchange="renderTable()"></select>
-    <button class="btn btn-primary" onclick="openRecordModal()">강사/코디 추가</button>
+    <button class="btn btn-primary" onclick="openRecordModal()">정산 등록 (방과후/맞춤형/코디/안전)</button>
     <button class="btn btn-setting" onclick="openSchoolSettingModal()">학교별 과목 회차 설정 (8회/12회)</button>
     <button class="btn" onclick="addNewSchoolPrompt()">+ 학교 등록</button>
     <button class="btn" onclick="exportCSV()">지급명세서 저장</button>
@@ -93,8 +102,9 @@
     <thead>
       <tr>
         <th rowspan="2">근무처</th>
-        <th rowspan="2">과목명</th>
-        <th rowspan="2">강사명</th>
+        <th rowspan="2">구분</th>
+        <th rowspan="2">과목명(역할)</th>
+        <th rowspan="2">강사/인력명</th>
         <th rowspan="2" class="detail-col">재료비</th>
         <th rowspan="2" class="detail-col">수업차시</th>
         <th rowspan="2">지급계</th>
@@ -143,23 +153,27 @@
   </div>
 </div>
 
-<!-- 강사 등록 및 수정 모달 -->
+<!-- 정산 등록 및 수정 모달 -->
 <div class="modal-overlay" id="recordModal">
   <div class="modal-content">
     <div class="modal-top">
-      <div style="display:flex; align-items:center; gap:20px;">
-        <h2 id="modalTitle">강사/코디 정산 등록</h2>
-        <label style="font-size:13px; color:#555; cursor:pointer;">
-          <input type="checkbox" id="isCoordinator" onchange="onInputCheckAutoMode()"> <strong>코디/안전관리자</strong> (기본급 정산)
-        </label>
-      </div>
+      <h2 id="modalTitle">정산 내역 등록</h2>
       <button class="close-icon" onclick="closeRecordModal()">&times;</button>
+    </div>
+
+    <!-- 구분 라디오 버튼 4개 -->
+    <div class="type-selector-bar">
+      <span>구분 선택:</span>
+      <label><input type="radio" name="calcCategory" value="방과후" checked onchange="onChangeCategory()"> 방과후프로그램</label>
+      <label><input type="radio" name="calcCategory" value="맞춤형" onchange="onChangeCategory()"> 맞춤형프로그램</label>
+      <label><input type="radio" name="calcCategory" value="코디" onchange="onChangeCategory()"> 코디</label>
+      <label><input type="radio" name="calcCategory" value="안전관리자" onchange="onChangeCategory()"> 안전관리자</label>
     </div>
 
     <div class="row-grid-3">
       <div class="input-item">
         <label>학교 선택</label>
-        <select id="modalSchool" onchange="onInputCheckAutoMode()"></select>
+        <select id="modalSchool" onchange="onChangeCategory()"></select>
       </div>
       <div class="input-item">
         <label>지급월 선택</label>
@@ -173,11 +187,11 @@
 
     <div class="row-grid-3">
       <div class="input-item">
-        <label>과목명</label>
-        <input type="text" id="subject" value="축구교실" onkeyup="onInputCheckAutoMode()">
+        <label id="subjectLabel">과목명</label>
+        <input type="text" id="subject" value="축구교실" onkeyup="onChangeCategory()">
       </div>
       <div class="input-item">
-        <label>강사명</label>
+        <label id="nameLabel">강사명</label>
         <input type="text" id="name" value="조은이">
       </div>
       <div class="input-item">
@@ -188,6 +202,7 @@
 
     <div id="modeStatusBadge" style="font-size:12px; font-weight:bold; margin-bottom:8px; color:#1890ff;"></div>
 
+    <!-- 방과후 4회 -->
     <div id="boxGeneral4" class="grid-wrap">
       <div class="grid-4w">
         <div class="cell-item"><label>4회(완강)</label><input type="number" id="w4" value="27" placeholder="0"></div>
@@ -197,6 +212,7 @@
       </div>
     </div>
 
+    <!-- 방과후 8회 -->
     <div id="boxDetailed8" class="grid-wrap" style="display:none;">
       <div class="grid-8w">
         <div class="cell-item"><label>8회(완강)</label><input type="number" id="e8" placeholder="0"></div>
@@ -210,6 +226,7 @@
       </div>
     </div>
 
+    <!-- 방과후 12회 -->
     <div id="boxDetailed12" class="grid-wrap" style="display:none;">
       <div class="grid-12w">
         <div class="cell-item"><label>12회(완강)</label><input type="number" id="c12" placeholder="0"></div>
@@ -229,7 +246,7 @@
 
     <div class="row-grid-3">
       <div class="input-item"><label>재료비 지원금</label><input type="number" id="material" placeholder="0"></div>
-      <div class="input-item"><label>수업차시(표시용)</label><input type="number" id="displayLessons" value="4"></div>
+      <div class="input-item"><label id="lessonsLabel">수업차시(표시용)</label><input type="number" id="displayLessons" value="4"></div>
       <div class="input-item"><label>비고</label><input type="text" id="note" placeholder="특이사항"></div>
     </div>
 
@@ -247,7 +264,7 @@
   const SCHOOL_KEY = 'afterschool_master_schools_v5';
   const SETTING_KEY = 'afterschool_school_subjects_setting_v5';
 
-  let currentEditId = null; // 수정 중인 데이터의 ID 보관
+  let currentEditId = null;
 
   const defaultSchoolSettings = {
     '청량초': { '피아노': '12', '영어': '8', '수학': '8', '컴퓨터': '12' },
@@ -255,8 +272,8 @@
   };
 
   const defaultData = [
-    { id: 1, school: '청량초', month: '2026-08', subject: '축구교실', name: '조은이', birth: '890113', material: 0, lessons: 4, baseRate: 26000, isCoord: false, counts: { w4: 27 }, grossPay: 702000, stdPay: 566514, specialTax: 0, indAccTax: 1860, incomeTax: 21060, localTax: 2100, netPay: 676980 },
-    { id: 2, school: '창영초', month: '2026-08', subject: '놀이영어(늘봄)', name: '정혜숙', birth: '781105', material: 0, lessons: 8, baseRate: 40000, isCoord: false, counts: { e8: 8 }, grossPay: 320000, stdPay: 258240, specialTax: 0, indAccTax: 850, incomeTax: 9600, localTax: 960, netPay: 308590 }
+    { id: 1, school: '청량초', category: '방과후', month: '2026-08', subject: '축구교실', name: '조은이', birth: '890113', material: 0, lessons: 4, baseRate: 26000, counts: { w4: 27 }, grossPay: 702000, stdPay: 566514, specialTax: 0, indAccTax: 1860, incomeTax: 21060, localTax: 2100, netPay: 676980 },
+    { id: 2, school: '창영초', category: '방과후', month: '2026-08', subject: '놀이영어(늘봄)', name: '정혜숙', birth: '781105', material: 0, lessons: 8, baseRate: 40000, counts: { e8: 8 }, grossPay: 320000, stdPay: 258240, specialTax: 0, indAccTax: 850, incomeTax: 9600, localTax: 960, netPay: 308590 }
   ];
 
   window.onload = function() {
@@ -354,13 +371,13 @@
 
   function openRecordModal() {
     currentEditId = null;
-    document.getElementById('modalTitle').innerText = "강사/코디 정산 등록";
+    document.getElementById('modalTitle').innerText = "정산 내역 등록";
     document.getElementById('btnSaveRecord').innerText = "저장";
 
-    document.getElementById('isCoordinator').checked = false;
+    setRadioVal('calcCategory', '방과후');
     document.getElementById('modalMonth').value = document.getElementById('activeMonth').value;
     document.getElementById('birth').value = '';
-    document.getElementById('subject').value = '';
+    document.getElementById('subject').value = '축구교실';
     document.getElementById('name').value = '';
     document.getElementById('baseRate').value = '26000';
     document.getElementById('material').value = '0';
@@ -368,20 +385,21 @@
     document.getElementById('note').value = '';
     clearAllCountInputs();
 
-    onInputCheckAutoMode();
+    onChangeCategory();
     document.getElementById('recordModal').style.display = 'flex';
   }
 
-  // --- 강사명 클릭 시 수정 모달 열기 ---
+  // --- 강사명 클릭 시 정보 수정 모달 열기 ---
   function openEditRecordModal(id) {
     const records = getRecords();
     const item = records.find(r => r.id === id);
     if (!item) return;
 
     currentEditId = id;
-    document.getElementById('modalTitle').innerText = `[${item.name}] 정보 수정`;
+    document.getElementById('modalTitle').innerText = `[${item.name}] 정산 정보 수정`;
     document.getElementById('btnSaveRecord').innerText = "수정 완료";
 
+    setRadioVal('calcCategory', item.category || '방과후');
     document.getElementById('modalSchool').value = item.school;
     document.getElementById('modalMonth').value = item.month;
     document.getElementById('birth').value = item.birth || '';
@@ -391,7 +409,6 @@
     document.getElementById('material').value = item.material || 0;
     document.getElementById('displayLessons').value = item.lessons || 4;
     document.getElementById('note').value = item.note || '';
-    document.getElementById('isCoordinator').checked = !!item.isCoord;
 
     clearAllCountInputs();
     if (item.counts) {
@@ -401,7 +418,7 @@
       }
     }
 
-    onInputCheckAutoMode();
+    onChangeCategory();
     document.getElementById('recordModal').style.display = 'flex';
   }
 
@@ -410,8 +427,9 @@
     document.getElementById('recordModal').style.display = 'none';
   }
 
-  function onInputCheckAutoMode() {
-    const isCoord = document.getElementById('isCoordinator').checked;
+  // 구분 및 과목 변경 시 입력창 형태/라벨 자동 전환
+  function onChangeCategory() {
+    const category = getRadioVal('calcCategory');
     const currentSchool = document.getElementById('modalSchool').value;
     const currentSubject = document.getElementById('subject').value.trim();
 
@@ -421,19 +439,43 @@
     const rateLabel = document.getElementById('rateLabel');
     const badge = document.getElementById('modeStatusBadge');
     const displayLessons = document.getElementById('displayLessons');
+    const lessonsLabel = document.getElementById('lessonsLabel');
+    const subjectLabel = document.getElementById('subjectLabel');
+    const nameLabel = document.getElementById('nameLabel');
 
     box4.style.display = 'none';
     box8.style.display = 'none';
     box12.style.display = 'none';
 
-    if (isCoord) {
-      rateLabel.innerText = '월 기본급 (정액)';
-      badge.innerText = '● 코디/관리자 모드 (기본급 입력)';
-      badge.style.color = '#52c41a';
-      if (!currentEditId) displayLessons.value = '20';
+    subjectLabel.innerText = "과목명";
+    nameLabel.innerText = "강사명";
+    lessonsLabel.innerText = "수업차시(표시용)";
+
+    if (category === '맞춤형') {
+      rateLabel.innerText = '시간(차시)당 단가';
+      lessonsLabel.innerText = '수업차시(계산반영)';
+      badge.innerText = '● 맞춤형프로그램 모드: [단가 × 수업차시 + 재료비] 로 자동 정산됩니다.';
+      badge.style.color = '#d46b08';
+      if (!currentEditId && displayLessons.value === '4') displayLessons.value = '8';
       return;
     }
 
+    if (category === '코디' || category === '안전관리자') {
+      rateLabel.innerText = '월 기본급 (정액)';
+      subjectLabel.innerText = "역할/업무명";
+      nameLabel.innerText = "성명";
+      badge.innerText = `● ${category} 모드: 월 기본급(정액)으로 정산됩니다.`;
+      badge.style.color = category === '코디' ? '#389e0d' : '#722ed1';
+      if (!currentEditId) {
+        displayLessons.value = (category === '코디') ? '20' : '15';
+        if (!document.getElementById('subject').value || document.getElementById('subject').value === '축구교실') {
+          document.getElementById('subject').value = category;
+        }
+      }
+      return;
+    }
+
+    // [방과후프로그램] 모드
     const settings = getSettings();
     const schoolMap = settings[currentSchool] || {};
     
@@ -448,26 +490,26 @@
     if (mode === '8') {
       box8.style.display = 'block';
       rateLabel.innerText = '8회 완강 기준수수료';
-      badge.innerText = `● [${currentSchool}] ${currentSubject} → 8회 세분화 모드 (n/8 환산)`;
+      badge.innerText = `● [${currentSchool}] ${currentSubject} → 방과후 8회 세분화 (n/8 환산)`;
       badge.style.color = '#fa8c16';
       if (!currentEditId) displayLessons.value = '8';
     } else if (mode === '12') {
       box12.style.display = 'block';
       rateLabel.innerText = '12회 완강 기준수수료';
-      badge.innerText = `● [${currentSchool}] ${currentSubject} → 12회 세분화 모드 (n/12 환산)`;
+      badge.innerText = `● [${currentSchool}] ${currentSubject} → 방과후 12회 세분화 (n/12 환산)`;
       badge.style.color = '#722ed1';
       if (!currentEditId) displayLessons.value = '12';
     } else {
       box4.style.display = 'block';
       rateLabel.innerText = '4주 완강 기준수수료';
-      badge.innerText = `● [${currentSchool}] ${currentSubject} → 4회 일반 모드 (n/4 환산)`;
+      badge.innerText = `● [${currentSchool}] ${currentSubject} → 방과후 4회 일반 (n/4 환산)`;
       badge.style.color = '#1890ff';
       if (!currentEditId) displayLessons.value = '4';
     }
   }
 
   function saveRecordFromModal() {
-    const isCoord = document.getElementById('isCoordinator').checked;
+    const category = getRadioVal('calcCategory');
     const school = document.getElementById('modalSchool').value;
     const month = document.getElementById('modalMonth').value;
     const birth = document.getElementById('birth').value;
@@ -475,19 +517,24 @@
     const name = document.getElementById('name').value;
     const rateOrSalary = Number(document.getElementById('baseRate').value) || 0;
     const material = Number(document.getElementById('material').value) || 0;
-    const displayLessons = Number(document.getElementById('displayLessons').value) || 4;
+    const displayLessons = Number(document.getElementById('displayLessons').value) || 0;
     const note = document.getElementById('note').value;
 
-    if (!name.trim()) return alert('강사명을 입력하세요.');
+    if (!name.trim()) return alert('성명/강사명을 입력하세요.');
 
     let grossPay = 0;
     const counts = {};
     const is8 = (document.getElementById('boxDetailed8').style.display !== 'none');
     const is12 = (document.getElementById('boxDetailed12').style.display !== 'none');
 
-    if (isCoord) {
+    if (category === '맞춤형') {
+      // 맞춤형 프로그램: 단가 * 수업차시 + 재료비
+      grossPay = Math.round(rateOrSalary * displayLessons) + material;
+    } else if (category === '코디' || category === '안전관리자') {
+      // 기본급 정액 정산
       grossPay = rateOrSalary + material;
     } else if (is8) {
+      // 방과후 8회 세분화
       let weightedSum = 0;
       for (let i = 1; i <= 8; i++) {
         const count = Number(document.getElementById(`e${i}`).value) || 0;
@@ -496,6 +543,7 @@
       }
       grossPay = Math.round(weightedSum * rateOrSalary) + material;
     } else if (is12) {
+      // 방과후 12회 세분화
       let weightedSum = 0;
       for (let i = 1; i <= 12; i++) {
         const count = Number(document.getElementById(`c${i}`).value) || 0;
@@ -504,6 +552,7 @@
       }
       grossPay = Math.round(weightedSum * rateOrSalary) + material;
     } else {
+      // 방과후 4회 일반
       const w4 = (Number(document.getElementById('w4').value) || 0);
       const w3 = (Number(document.getElementById('w3').value) || 0);
       const w2 = (Number(document.getElementById('w2').value) || 0);
@@ -525,26 +574,26 @@
     const records = getRecords();
 
     if (currentEditId) {
-      // 수정 모드
+      // 수정
       const idx = records.findIndex(r => r.id === currentEditId);
       if (idx !== -1) {
         records[idx] = {
           ...records[idx],
-          school, month, subject, name, birth, material, lessons: displayLessons,
-          baseRate: rateOrSalary, isCoord, counts, note,
+          school, category, month, subject, name, birth, material, lessons: displayLessons,
+          baseRate: rateOrSalary, counts, note,
           grossPay, stdPay, specialTax, indAccTax, incomeTax, localTax, netPay
         };
       }
-      alert(`[${name}] 강사님 정보가 수정되었습니다.`);
+      alert(`[${name}] 님의 정보가 수정되었습니다.`);
     } else {
       // 신규 등록
       records.push({
         id: Date.now(),
-        school, month, subject, name, birth, material, lessons: displayLessons,
-        baseRate: rateOrSalary, isCoord, counts, note,
+        school, category, month, subject, name, birth, material, lessons: displayLessons,
+        baseRate: rateOrSalary, counts, note,
         grossPay, stdPay, specialTax, indAccTax, incomeTax, localTax, netPay
       });
-      alert(`[${name}] 강사님이 등록되었습니다.`);
+      alert(`[${name}] 님이 등록되었습니다.`);
     }
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
@@ -570,9 +619,11 @@
 
     filtered.forEach(item => {
       totalSum += item.grossPay;
+      const cat = item.category || '방과후';
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${item.school}</td>
+        <td><span class="badge-cat cat-${cat}">${cat}</span></td>
         <td>${item.subject}</td>
         <td><span class="name-link" onclick="openEditRecordModal(${item.id})" title="클릭하여 수정">${item.name}</span></td>
         <td class="money-col detail-col">${item.material.toLocaleString()}</td>
@@ -618,11 +669,11 @@
     printArea.style.display = 'block';
     printArea.innerHTML = `
       <div style="border: 2px solid #333; padding: 25px; max-width: 600px; margin: 20px auto; font-family: 'Malgun Gothic';">
-        <h2 style="text-align: center; margin-bottom: 25px;">방과후 강사료 지급명세서</h2>
+        <h2 style="text-align: center; margin-bottom: 25px;">[${item.category || '방과후'}] 급여 지급명세서</h2>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
           <tr><th>근무처</th><td>${item.school}</td><th>정산월</th><td>${item.month}</td></tr>
           <tr><th>성명</th><td>${item.name}</td><th>생년월일</th><td>${item.birth}</td></tr>
-          <tr><th>과목명</th><td colspan="3">${item.subject}</td></tr>
+          <tr><th>구분 / 과목</th><td colspan="3">[${item.category || '방과후'}] ${item.subject} (차시: ${item.lessons})</td></tr>
         </table>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
           <tr style="background: #f5f5f5;"><th colspan="2">지급 항목</th><th colspan="2">공제 항목</th></tr>
@@ -642,9 +693,9 @@
 
   function exportCSV() {
     const records = getRecords();
-    let csv = '\uFEFF근무처,과목명,강사명,재료비,수업차시,지급계,경비율제외,특고료,산재보험료,소득세,주민세,실지급액\n';
+    let csv = '\uFEFF근무처,구분,과목명,성명,재료비,수업차시,지급계,경비율제외,특고료,산재보험료,소득세,주민세,실지급액\n';
     records.forEach(r => {
-      csv += `${r.school},${r.subject},${r.name},${r.material},${r.lessons},${r.grossPay},${r.stdPay},${r.specialTax},${r.indAccTax},${r.incomeTax},${r.localTax},${r.netPay}\n`;
+      csv += `${r.school},${r.category || '방과후'},${r.subject},${r.name},${r.material},${r.lessons},${r.grossPay},${r.stdPay},${r.specialTax},${r.indAccTax},${r.incomeTax},${r.localTax},${r.netPay}\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
