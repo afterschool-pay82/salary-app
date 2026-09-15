@@ -124,16 +124,23 @@
       </thead>
       <tbody>
         <tr>
-          <td class="col-title">지급계 (수수료)</td>
+          <td class="col-title" id="titleGrossPay">지급계 (수수료)</td>
           <td class="col-val" id="valGrossPay">0원</td>
           <td class="col-title">사업소득세 (3%)</td>
           <td class="col-val" id="valIncomeTax">0원</td>
         </tr>
-        <tr>
+        <!-- 코디/안전관리자일 경우 아래 재료비 행 숨김 -->
+        <tr id="rowMaterial">
           <td class="col-title">재료비 지원금</td>
           <td class="col-val" id="valMaterial">0원</td>
           <td class="col-title">지방소득세 (0.3%)</td>
           <td class="col-val" id="valLocalTax">0원</td>
+        </tr>
+        <tr id="rowTaxOnly1" style="display:none;">
+          <td class="col-title"></td>
+          <td class="col-val"></td>
+          <td class="col-title">지방소득세 (0.3%)</td>
+          <td class="col-val" id="valLocalTaxAlt">0원</td>
         </tr>
         <tr>
           <td class="col-title"></td>
@@ -208,7 +215,7 @@
   function renderSlip(d) {
     const rawCat = d.category || '방과후';
     
-    // 1. 구분 명칭 포맷 ('방과후' -> '방과후프로그램', '맞춤형' -> '맞춤형프로그램')
+    // 1. 구분 명칭 정리
     let fullCategoryName = rawCat;
     if (rawCat === '방과후') fullCategoryName = '방과후프로그램';
     else if (rawCat === '맞춤형') fullCategoryName = '맞춤형프로그램';
@@ -219,16 +226,17 @@
 
     document.getElementById('subTitleMonth').innerText = `${d.month || ''} 귀속 정산`;
 
-    // 2. 기본 정보 채우기
+    // 2. 기본 정보
     document.getElementById('infoSchool').innerText = d.school || '-';
     document.getElementById('infoName').innerText = d.name || '-';
     document.getElementById('infoCategory').innerText = fullCategoryName;
     document.getElementById('infoSubject').innerText = d.subject || '-';
 
-    // 3. 코디 / 안전관리자일 경우 수업차시 행 숨기기
-    const rowLessons = document.getElementById('rowLessons');
+    // 3. 코디 / 안전관리자 판단
     const isFixedStaff = (rawCat === '코디' || rawCat === '안전관리자' || d.subject === '코디' || d.subject === '안전관리자');
-    
+
+    // 수업차시 행 처리
+    const rowLessons = document.getElementById('rowLessons');
     if (isFixedStaff) {
       rowLessons.style.display = 'none';
     } else {
@@ -236,9 +244,24 @@
       document.getElementById('infoLessons').innerText = (d.lessons || 0) + '차시';
     }
 
-    // 4. 금액 계산 및 출력
+    // 재료비 행 처리 (코디/안전관리자일 때 재료비 행 숨김)
+    const rowMaterial = document.getElementById('rowMaterial');
+    const rowTaxOnly1 = document.getElementById('rowTaxOnly1');
+    const titleGrossPay = document.getElementById('titleGrossPay');
+
+    if (isFixedStaff) {
+      rowMaterial.style.display = 'none';
+      rowTaxOnly1.style.display = ''; // 우측 지방소득세 유지를 위한 빈 줄
+      titleGrossPay.innerText = '월 기본급 (정액)';
+    } else {
+      rowMaterial.style.display = '';
+      rowTaxOnly1.style.display = 'none';
+      titleGrossPay.innerText = '지급계 (수수료)';
+    }
+
+    // 4. 금액 계산 및 반영
     const grossPay = d.grossPay || 0;
-    const material = d.material || 0;
+    const material = isFixedStaff ? 0 : (d.material || 0);
     const incomeTax = d.incomeTax || 0;
     const localTax = d.localTax || 0;
     const specialTax = d.specialTax || 0;
@@ -252,6 +275,7 @@
 
     document.getElementById('valIncomeTax').innerText = incomeTax.toLocaleString() + '원';
     document.getElementById('valLocalTax').innerText = localTax.toLocaleString() + '원';
+    document.getElementById('valLocalTaxAlt').innerText = localTax.toLocaleString() + '원';
     document.getElementById('valSpecialTax').innerText = specialTax.toLocaleString() + '원';
     document.getElementById('valIndAccTax').innerText = indAccTax.toLocaleString() + '원';
     document.getElementById('valTotalDeduct').innerText = totalDeduct.toLocaleString() + '원';
