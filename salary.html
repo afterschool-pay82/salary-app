@@ -21,8 +21,6 @@
     .btn-primary:hover { background: #1d39c4; }
     .btn-setting { background: #52c41a; color: #fff; border-color: #52c41a; }
     .btn-setting:hover { background: #389e0d; }
-    .btn-kakao { background: #fee500; color: #3c1e1e; border-color: #fada0a; font-weight: bold; padding: 3px 8px; font-size: 11px; border-radius: 3px; cursor: pointer; }
-    .btn-kakao:hover { background: #fada0a; }
     .checkbox-label { margin-left: 12px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     
     .summary-text { font-size: 13px; color: #666; margin-bottom: 12px; font-weight: 600; }
@@ -105,7 +103,7 @@
         <th rowspan="2" class="detail-col">산재<br>보험료</th>
         <th colspan="2" class="detail-col">공제액</th>
         <th rowspan="2">실지급액</th>
-        <th rowspan="2">발송 / 관리</th>
+        <th rowspan="2">관리</th>
       </tr>
       <tr class="detail-col">
         <th>소득세</th>
@@ -587,9 +585,8 @@
         <td class="money-col detail-col">${item.localTax.toLocaleString()}</td>
         <td class="money-col highlight-blue">${item.netPay.toLocaleString()}</td>
         <td>
-          <button class="btn-kakao" onclick="copyKakaoSlip(${item.id})">카톡 복사</button>
-          <button style="border:none; background:none; color:#1890ff; cursor:pointer; font-size:11px; margin-left:4px;" onclick="printPayslip(${item.id})">인쇄</button>
-          <button style="border:none; background:none; color:red; cursor:pointer; font-size:11px; margin-left:4px;" onclick="deleteItem(${item.id})">삭제</button>
+          <button style="border: 1px solid #d9d9d9; background: #fff; color: #1890ff; padding: 4px 8px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold;" onclick="printPayslip(${item.id})">인쇄</button>
+          <button style="border: 1px solid #ffa39e; background: #fff1f0; color: #f5222d; padding: 4px 8px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; margin-left: 4px;" onclick="deleteItem(${item.id})">삭제</button>
         </td>
       `;
       tbody.appendChild(row);
@@ -597,55 +594,6 @@
 
     document.getElementById('summaryCounter').innerText = 
       `전체 ${filtered.length}명, 총 지급계 ₩${totalSum.toLocaleString()}`;
-  }
-
-  // --- 온라인 view.html 링크가 포함된 카카오톡 복사 기능 ---
-  function copyKakaoSlip(id) {
-    const item = getRecords().find(r => r.id === id);
-    if (!item) return;
-
-    // view.html로 안전하게 전달할 데이터 암호화(Base64)
-    const payload = JSON.stringify({
-      school: item.school,
-      month: item.month,
-      subject: item.subject,
-      name: item.name,
-      birth: item.birth,
-      material: item.material,
-      lessons: item.lessons,
-      grossPay: item.grossPay,
-      stdPay: item.stdPay,
-      specialTax: item.specialTax,
-      indAccTax: item.indAccTax,
-      incomeTax: item.incomeTax,
-      localTax: item.localTax,
-      netPay: item.netPay
-    });
-    const encodedData = encodeURIComponent(btoa(unescape(encodeURIComponent(payload))));
-
-    // 현재 도메인 기준 view.html 전체 링크 생성
-    const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-    const viewUrl = `${baseUrl}/view.html?data=${encodedData}`;
-
-    const text = 
-`[${item.month} 방과후 강사료 지급명세 안내]
-- 근무처: ${item.school}
-- 과목명: ${item.subject}
-- 강사명: ${item.name} 선생님
-
-■ 실 지급액(차인지급액): ${item.netPay.toLocaleString()}원
-
-▶ 상세 급여명세서 확인하기:
-${viewUrl}
-(※ 본인확인을 위해 생년월일 6자리를 입력해 주세요.)
-
-항상 열정으로 함께해 주셔서 감사드립니다.`;
-
-    navigator.clipboard.writeText(text).then(() => {
-      alert(`[${item.name}] 선생님의 명세서 링크가 포함된 안내문이 복사되었습니다!\n\n카카오톡에 바로 붙여넣기(Ctrl + V) 하시면 됩니다.`);
-    }).catch(() => {
-      prompt('아래 내용을 복사하여 카카오톡에 붙여넣으세요:', text);
-    });
   }
 
   function toggleColumns() {
