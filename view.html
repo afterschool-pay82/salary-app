@@ -5,13 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>(주)밝은생각 - 급여 지급명세서 조회</title>
 
-  <!-- 카카오톡 링크 미리보기 (Open Graph) 설정 -->
+  <!-- 카카오톡 링크 공유 카드 (Open Graph) -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="(주)밝은생각">
   <meta property="og:title" content="(주)밝은생각 급여명세서 조회">
   <meta property="og:description" content="성명과 생년월일(6자리)을 입력하여 이번 달 명세서를 확인하세요.">
-  <!-- 신뢰감을 주는 서류/급여 명세서 전용 대표 이미지 -->
+  <!-- 신뢰감을 주는 고화질 급여·정산 문서 대표 이미지 -->
   <meta property="og:image" content="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80">
+  <meta property="og:image:width" content="800">
+  <meta property="og:image:height" content="533">
 
   <style>
     * { box-sizing: border-box; }
@@ -20,7 +22,7 @@
     
     /* 인증/조회 화면 */
     #authBox { padding: 40px 24px; text-align: center; }
-    .company-header { font-size: 14px; font-weight: bold; color: #2f54eb; margin-bottom: 4px; letter-spacing: -0.5px; }
+    .company-header { font-size: 15px; font-weight: 800; color: #2f54eb; margin-bottom: 6px; letter-spacing: -0.5px; }
     .lock-icon { font-size: 38px; margin-bottom: 10px; }
     .auth-title { font-size: 21px; font-weight: 800; margin-bottom: 6px; color: #1f1f1f; }
     .auth-desc { font-size: 13px; color: #666; margin-bottom: 24px; line-height: 1.5; }
@@ -38,7 +40,7 @@
     .slip-header { text-align: center; border-bottom: 2px solid #2f54eb; padding-bottom: 18px; margin-bottom: 20px; position: relative; }
     .btn-back { position: absolute; left: 0; top: 0; background: none; border: 1px solid #d9d9d9; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #666; }
     
-    .company-title-tag { font-size: 12px; color: #666; font-weight: 600; margin-bottom: 4px; }
+    .company-title-tag { font-size: 13px; color: #2f54eb; font-weight: 800; margin-bottom: 4px; }
     .slip-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 8px; }
     .badge-방과후 { background: #e6f7ff; color: #1890ff; }
     .badge-맞춤형 { background: #fff7e6; color: #d46b08; }
