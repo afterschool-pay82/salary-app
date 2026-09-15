@@ -94,14 +94,16 @@
     <div class="auth-title">급여 지급명세서 조회</div>
     <div class="auth-desc">개인정보 보호를 위해 본인 확인 정보를 입력해 주세요.</div>
     
+    <!-- 성명: placeholder 공란 -->
     <div class="auth-input-wrap">
       <label for="nameInput">성 명</label>
-      <input type="text" id="nameInput" class="auth-input" placeholder="이름을 입력하세요">
+      <input type="text" id="nameInput" class="auth-input" placeholder="">
     </div>
 
+    <!-- 주민번호 앞자리: 예: 123456 -->
     <div class="auth-input-wrap">
       <label for="birthInput">생년월일 (주민번호 앞 6자리)</label>
-      <input type="password" id="birthInput" class="auth-input" placeholder="예: 890113" maxlength="6" inputmode="numeric">
+      <input type="password" id="birthInput" class="auth-input" placeholder="예: 123456" maxlength="6" inputmode="numeric">
     </div>
 
     <button class="btn-auth" onclick="verifyUser()">명세서 확인하기</button>
