@@ -8,13 +8,13 @@ window.PAYROLL_PUBLIC_DATA = [
     "birth": "890113",
     "material": 0,
     "lessons": 4,
-    "grossPay": 702000,
-    "stdPay": 566514,
+    "grossPay": 276000,
+    "stdPay": 222713,
     "specialTax": 0,
-    "indAccTax": 1860,
-    "incomeTax": 21060,
-    "localTax": 2100,
-    "netPay": 676980
+    "indAccTax": 730,
+    "incomeTax": 8280,
+    "localTax": 820,
+    "netPay": 266170
   },
   {
     "school": "창영초",
