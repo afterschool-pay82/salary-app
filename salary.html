@@ -13,7 +13,10 @@
     .title-area h1 { margin: 0; font-size: 22px; font-weight: 800; color: #1f1f1f; }
     .month-select { font-size: 14px; padding: 5px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-weight: 600; outline: none; }
     
-    .action-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    /* 2단 분리 액션 바 */
+    .action-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .action-bar-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
     .school-filter { padding: 6px 12px; font-size: 13px; border: 1px solid #d9d9d9; border-radius: 4px; min-width: 110px; outline: none; }
     
     .search-input { width: 140px; height: 34px; padding: 0 10px; border: 1.5px solid #adc6ff; border-radius: 4px; font-size: 13px; outline: none; }
@@ -24,16 +27,16 @@
     .btn-search:hover { background: #1d39c4; }
     .btn-reset { background: #f5f5f5; color: #555; }
     .btn-reset:hover { background: #e8e8e8; }
-    .btn-primary { background: #1890ff; color: #fff; border-color: #1890ff; }
+    .btn-primary { background: #1890ff; color: #fff; border-color: #1890ff; font-weight: bold; }
     .btn-primary:hover { background: #096dd9; }
     .btn-recalc { background: #722ed1; color: #fff; border-color: #722ed1; font-weight: bold; }
     .btn-recalc:hover { background: #531dab; }
     .btn-tax { background: #13c2c2; color: #fff; border-color: #13c2c2; font-weight: bold; }
     .btn-tax:hover { background: #08979c; }
-    .btn-publish { background: #fa8c16; color: #fff; border-color: #fa8c16; font-weight: bold; margin-left: 6px; }
-    .btn-publish:hover { background: #d46b08; }
-    .btn-setting { background: #52c41a; color: #fff; border-color: #52c41a; }
+    .btn-setting { background: #52c41a; color: #fff; border-color: #52c41a; font-weight: bold; }
     .btn-setting:hover { background: #389e0d; }
+    .btn-publish { background: #fa8c16; color: #fff; border-color: #fa8c16; font-weight: bold; }
+    .btn-publish:hover { background: #d46b08; }
     
     /* 상단 요약 바 */
     .summary-text { 
@@ -114,21 +117,25 @@
     </div>
   </div>
 
-  <div class="action-bar">
-    <select id="schoolFilter" class="school-filter" onchange="renderTable()"></select>
-    
-    <!-- 강사명 검색 바 -->
-    <input type="text" id="teacherSearchInput" class="search-input" placeholder="강사명 검색" onkeyup="if(event.key==='Enter') searchTeacher();">
-    <button class="btn btn-search" onclick="searchTeacher()">조회</button>
-    <button class="btn btn-reset" onclick="resetTeacherSearch()">전체보기</button>
+  <div class="action-container">
+    <!-- 1열: 색상 있는 기능 버튼 -->
+    <div class="action-bar-row">
+      <button class="btn btn-primary" onclick="openRecordModal()">정산 등록 (방과후/맞춤형/코디/안전)</button>
+      <button class="btn btn-recalc" onclick="recalculateAllData(true)">⚡ 전체 데이터 일괄 재계산</button>
+      <button class="btn btn-tax" onclick="exportTaxCombinedCSV()">📊 세무신고용 강사별 합산 CSV</button>
+      <button class="btn btn-setting" onclick="openSchoolSettingModal()">학교별 회차 설정</button>
+      <button class="btn btn-publish" onclick="exportDataJs()">📢 명세서 데이터 발행 (data.js 저장)</button>
+    </div>
 
-    <button class="btn btn-primary" onclick="openRecordModal()">정산 등록 (방과후/맞춤형/코디/안전)</button>
-    <button class="btn btn-recalc" onclick="recalculateAllData(true)">⚡ 전체 데이터 일괄 재계산</button>
-    <button class="btn btn-tax" onclick="exportTaxCombinedCSV()">📊 세무신고용 강사별 합산 CSV</button>
-    <button class="btn btn-setting" onclick="openSchoolSettingModal()">학교별 회차 설정</button>
-    <button class="btn" onclick="addNewSchoolPrompt()">+ 학교 등록</button>
-    <button class="btn" onclick="exportCSV()">학교별 대장 CSV 저장</button>
-    <button class="btn btn-publish" onclick="exportDataJs()">📢 명세서 데이터 발행 (data.js 저장)</button>
+    <!-- 2열: 검색/필터 및 흰색 기본 버튼 -->
+    <div class="action-bar-row">
+      <select id="schoolFilter" class="school-filter" onchange="renderTable()"></select>
+      <input type="text" id="teacherSearchInput" class="search-input" placeholder="강사명 검색" onkeyup="if(event.key==='Enter') searchTeacher();">
+      <button class="btn btn-search" onclick="searchTeacher()">조회</button>
+      <button class="btn btn-reset" onclick="resetTeacherSearch()">전체보기</button>
+      <button class="btn" onclick="addNewSchoolPrompt()">+ 학교 등록</button>
+      <button class="btn" onclick="exportCSV()">학교별 대장 CSV 저장</button>
+    </div>
   </div>
 
   <!-- 합계 요약 바 (지급계, 소득세, 주민세, 특고료, 산재, 실지급액) -->
