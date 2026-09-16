@@ -91,9 +91,19 @@
     .slip-title { font-size: 22px; font-weight: 800; margin: 0; color: #111; }
     .slip-subtitle { font-size: 13px; color: #888; margin-top: 4px; }
 
-    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 13px; }
-    .info-table th { width: 25%; background: #fffaf0; padding: 10px; text-align: left; color: #777; border: 1px solid #ffe7ba; }
-    .info-table td { width: 25%; padding: 10px; border: 1px solid #ffe7ba; font-weight: 600; color: #222; }
+    /* 정보 테이블: 글자 중간 끊김 방지(keep-all) 및 줄간격 확보 */
+    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 13px; table-layout: fixed; }
+    .info-table th { width: 22%; background: #fffaf0; padding: 10px 8px; text-align: left; color: #777; border: 1px solid #ffe7ba; vertical-align: middle; }
+    .info-table td { 
+      padding: 10px 10px; 
+      border: 1px solid #ffe7ba; 
+      font-weight: 600; 
+      color: #222; 
+      word-break: keep-all; 
+      overflow-wrap: break-word; 
+      line-height: 1.5; 
+      vertical-align: middle; 
+    }
 
     /* 차수별 수강인원 2열 레이아웃 */
     .counts-box { background: #fffaf0; border: 1px solid #ffd591; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; }
@@ -121,9 +131,8 @@
       font-size: 12.5px; 
       font-weight: 800; 
       color: #d46b08; 
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      word-break: keep-all;
+      line-height: 1.4;
     }
     
     .counts-grid { display: flex; flex-direction: column; gap: 6px; }
@@ -198,9 +207,9 @@
     <table class="info-table">
       <tr>
         <th>근무처</th>
-        <td id="infoSchool">-</td>
+        <td id="infoSchool" style="width:28%;">-</td>
         <th>성 명</th>
-        <td id="infoName">-</td>
+        <td id="infoName" style="width:28%;">-</td>
       </tr>
       <tr>
         <th>생년월일</th>
@@ -370,6 +379,7 @@
     if (uniqueNormalizedSubjects.length === 1) {
       finalSubjectDisplay = uniqueNormalizedSubjects[0];
     } else {
+      // 복수 과목일 경우 줄바꿈이 자연스럽게 되도록 처리
       finalSubjectDisplay = list.map(x => `[${x.school}] ${normalizeSubjectName(x.subject)}`).join(', ');
     }
 
