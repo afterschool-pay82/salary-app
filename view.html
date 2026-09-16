@@ -113,7 +113,7 @@
       gap: 6px;
     }
     .count-chip strong { color: #fa8c16; font-size: 13.5px; }
-    .chip-pay { color: #8c8c8c; font-size: 11.5px; font-weight: 600; }
+    .chip-pay { color: #666; font-size: 12px; font-weight: 600; }
 
     .money-section-title { font-size: 14px; font-weight: bold; color: #1f1f1f; margin-bottom: 10px; }
     .calc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
@@ -324,15 +324,12 @@
     const rowWithoutSubject = document.getElementById('rowWithoutSubject');
     const rowLessons = document.getElementById('rowLessons');
 
-    // [핵심] 동일 과목 통합 표기 로직
     const uniqueNormalizedSubjects = [...new Set(list.map(x => normalizeSubjectName(x.subject)))];
     let finalSubjectDisplay = '';
     
     if (uniqueNormalizedSubjects.length === 1) {
-      // 모든 학교의 과목이 동일하면 단일 명칭으로만 표기 (예: '요리', '영어회화')
       finalSubjectDisplay = uniqueNormalizedSubjects[0];
     } else {
-      // 서로 다른 과목이면 학교별로 구분하여 표기
       finalSubjectDisplay = list.map(x => `[${x.school}] ${normalizeSubjectName(x.subject)}`).join(', ');
     }
 
@@ -365,7 +362,7 @@
     }
 
     // -------------------------------------------------------------
-    // 차수별 수강인원 및 단추(칩) 안 지급계 표출
+    // 차수별 수강인원 및 금액(지급계) 계산 표출
     // -------------------------------------------------------------
     const boxCounts = document.getElementById('boxCounts');
     const countsContainer = document.getElementById('countsContainer');
@@ -382,7 +379,6 @@
           return numB - numA;
         });
 
-        // 0명 초과인 유효 키만 추출
         const validKeys = keys.filter(k => (Number(item.counts[k]) || 0) > 0);
 
         if (validKeys.length > 0) {
@@ -397,30 +393,43 @@
           const grid = document.createElement('div');
           grid.className = 'counts-grid';
 
-          // 완강 기준 차수 파악 (8회 모드인지, 12회 모드인지, 4회 모드인지)
+          // 완강 기준 차수 파악
           let totalMaxLessons = 4;
           if (validKeys.some(k => k.startsWith('c'))) totalMaxLessons = 12;
           else if (validKeys.some(k => k.startsWith('e'))) totalMaxLessons = 8;
+
+          // 총 수수료 (재료비 제외)
+          const coursePayOnly = (item.grossPay || 0) - (item.material || 0);
+
+          // baseRate가 비어있을 경우 역산 처리
+          let effectiveBaseRate = Number(item.baseRate) || 0;
+          if (!effectiveBaseRate && coursePayOnly > 0) {
+            let totalWeightedSteps = 0;
+            validKeys.forEach(k => {
+              const c = Number(item.counts[k]) || 0;
+              const n = parseInt(k.replace(/[^0-9]/g, ''), 10);
+              totalWeightedSteps += (n / totalMaxLessons) * c;
+            });
+            if (totalWeightedSteps > 0) {
+              effectiveBaseRate = Math.round(coursePayOnly / totalWeightedSteps);
+            }
+          }
 
           validKeys.forEach(k => {
             const count = Number(item.counts[k]) || 0;
             const num = parseInt(k.replace(/[^0-9]/g, ''), 10);
             totalStudentsSum += count;
 
-            // 회차별 단가 = ROUNDDOWN(기준단가 / 완강차수 * 수업차수, -1)
-            let stepRate = item.baseRate || 0;
-            if (item.baseRate && totalMaxLessons > 0) {
-              if (totalMaxLessons === num) {
-                stepRate = item.baseRate;
-              } else {
-                stepRate = Math.floor(((item.baseRate / totalMaxLessons) * num) / 10) * 10;
-              }
+            let stepRate = effectiveBaseRate;
+            if (totalMaxLessons !== num && effectiveBaseRate > 0) {
+              stepRate = Math.floor(((effectiveBaseRate / totalMaxLessons) * num) / 10) * 10;
             }
-            
-            // 해당 차수의 지급계 = 차수단가 * 인원수
+
             let stepPay = stepRate * count;
-            // 만약 baseRate가 없거나 0이면 단일 건일 때 grossPay 대체
-            if (!stepPay && validKeys.length === 1) stepPay = item.grossPay || 0;
+            // 만약 그래도 0원이면 단일 건 기준 전체 금액 적용
+            if ((!stepPay || stepPay === 0) && validKeys.length === 1) {
+              stepPay = coursePayOnly;
+            }
 
             const chip = document.createElement('div');
             chip.className = 'count-chip';
