@@ -150,6 +150,7 @@
       </thead>
       <tbody>
         <tr><td><strong>피아노</strong></td><td><input type="radio" name="set_piano" value="4"></td><td><input type="radio" name="set_piano" value="8"></td><td><input type="radio" name="set_piano" value="12" checked></td></tr>
+        <tr><td><strong>피아노2</strong></td><td><input type="radio" name="set_piano2" value="4"></td><td><input type="radio" name="set_piano2" value="8"></td><td><input type="radio" name="set_piano2" value="12" checked></td></tr>
         <tr><td><strong>영어</strong></td><td><input type="radio" name="set_english" value="4"></td><td><input type="radio" name="set_english" value="8" checked></td><td><input type="radio" name="set_english" value="12"></td></tr>
         <tr><td><strong>영어2</strong></td><td><input type="radio" name="set_english2" value="4"></td><td><input type="radio" name="set_english2" value="8"></td><td><input type="radio" name="set_english2" value="12" checked></td></tr>
         <tr><td><strong>수학</strong></td><td><input type="radio" name="set_math" value="4"></td><td><input type="radio" name="set_math" value="8" checked></td><td><input type="radio" name="set_math" value="12"></td></tr>
@@ -274,8 +275,8 @@
   let currentEditId = null;
 
   const defaultSchoolSettings = {
-    '창영초': { '피아노': '12', '영어': '8', '영어2': '12', '수학': '12', '컴퓨터1': '4', '컴퓨터2': '8' },
-    '청량초': { '피아노': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터1': '4', '컴퓨터2': '8' }
+    '창영초': { '피아노': '12', '피아노2': '12', '영어': '8', '영어2': '12', '수학': '12', '컴퓨터1': '4', '컴퓨터2': '8' },
+    '청량초': { '피아노': '12', '피아노2': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터1': '4', '컴퓨터2': '8' }
   };
 
   const defaultData = [
@@ -324,7 +325,7 @@
     localStorage.setItem(SCHOOL_KEY, JSON.stringify(schools));
     
     const settings = getSettings();
-    settings[s.trim()] = { '피아노': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터1': '4', '컴퓨터2': '8' };
+    settings[s.trim()] = { '피아노': '12', '피아노2': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터1': '4', '컴퓨터2': '8' };
     localStorage.setItem(SETTING_KEY, JSON.stringify(settings));
 
     initSchoolDropdowns();
@@ -344,9 +345,10 @@
   function loadSchoolSettings() {
     const targetSchool = document.getElementById('settingSchoolSelect').value;
     const settings = getSettings();
-    const map = settings[targetSchool] || { '피아노': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터1': '4', '컴퓨터2': '8' };
+    const map = settings[targetSchool] || { '피아노': '12', '피아노2': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터1': '4', '컴퓨터2': '8' };
 
     setRadioVal('set_piano', map['피아노'] || '12');
+    setRadioVal('set_piano2', map['피아노2'] || '12');
     setRadioVal('set_english', map['영어'] || '8');
     setRadioVal('set_english2', map['영어2'] || '12');
     setRadioVal('set_math', map['수학'] || '8');
@@ -369,6 +371,7 @@
     const settings = getSettings();
     settings[targetSchool] = {
       '피아노': getRadioVal('set_piano'),
+      '피아노2': getRadioVal('set_piano2'),
       '영어': getRadioVal('set_english'),
       '영어2': getRadioVal('set_english2'),
       '수학': getRadioVal('set_math'),
@@ -525,12 +528,13 @@
     const schoolMap = settings[currentSchool] || {};
     
     let mode = '4';
-    for (const key of ['컴퓨터2', '컴퓨터1', '영어2', '피아노', '영어', '수학', '컴퓨터']) {
+    // 긴 단어(피아노2, 컴퓨터2, 컴퓨터1, 영어2)부터 매칭하여 정확히 분기
+    for (const key of ['피아노2', '컴퓨터2', '컴퓨터1', '영어2', '피아노', '영어', '수학', '컴퓨터']) {
       if (currentSubject.includes(key)) {
         if (key === '컴퓨터') {
           mode = schoolMap['컴퓨터1'] || '4';
         } else {
-          mode = schoolMap[key] || (key === '영어2' ? '12' : (key === '컴퓨터2' ? '8' : '4'));
+          mode = schoolMap[key] || (key === '영어2' || key === '피아노' || key === '피아노2' ? '12' : (key === '컴퓨터2' ? '8' : '4'));
         }
         break;
       }
@@ -771,7 +775,6 @@
       `전체 ${filtered.length}명, 총 지급계 ₩${totalSum.toLocaleString()}`;
   }
 
-  // [중요 수정] exportDataJs에서 baseRate 항목을 함께 내보내도록 수정
   function exportDataJs() {
     const records = getRecords();
     if (records.length === 0) return alert('등록된 정산 내역이 없습니다.');
@@ -789,7 +792,7 @@
       birth: (r.birth || '').trim(),
       material: r.material,
       lessons: r.lessons,
-      baseRate: r.baseRate || 0, // <--- baseRate 단가 전달
+      baseRate: r.baseRate || 0,
       counts: r.counts || {},
       grossPay: r.grossPay,
       stdPay: r.stdPay,
