@@ -21,6 +21,8 @@
     .btn-primary:hover { background: #1d39c4; }
     .btn-recalc { background: #722ed1; color: #fff; border-color: #722ed1; font-weight: bold; }
     .btn-recalc:hover { background: #531dab; }
+    .btn-tax { background: #13c2c2; color: #fff; border-color: #13c2c2; font-weight: bold; }
+    .btn-tax:hover { background: #08979c; }
     .btn-publish { background: #fa8c16; color: #fff; border-color: #fa8c16; font-weight: bold; margin-left: 6px; }
     .btn-publish:hover { background: #d46b08; }
     .btn-setting { background: #52c41a; color: #fff; border-color: #52c41a; }
@@ -110,9 +112,10 @@
     <select id="schoolFilter" class="school-filter" onchange="renderTable()"></select>
     <button class="btn btn-primary" onclick="openRecordModal()">정산 등록 (방과후/맞춤형/코디/안전)</button>
     <button class="btn btn-recalc" onclick="recalculateAllData(true)">⚡ 전체 데이터 일괄 재계산</button>
+    <button class="btn btn-tax" onclick="exportTaxCombinedCSV()">📊 세무신고용 강사별 합산 CSV</button>
     <button class="btn btn-setting" onclick="openSchoolSettingModal()">학교별 회차 설정</button>
     <button class="btn" onclick="addNewSchoolPrompt()">+ 학교 등록</button>
-    <button class="btn" onclick="exportCSV()">지급명세서 CSV 저장</button>
+    <button class="btn" onclick="exportCSV()">학교별 대장 CSV 저장</button>
     <label class="checkbox-label">
       <input type="checkbox" id="chkOnlyNetPay" onchange="toggleColumns()"> 실지급액만 보기
     </label>
@@ -793,7 +796,6 @@
       tbody.appendChild(row);
     });
 
-    // 상단 요약 바 업데이트 (지급계 + 실지급액계)
     document.getElementById('summaryCounter').innerHTML = `
       <span>전체 ${filtered.length}명</span>
       <span style="color:#d9d9d9;">|</span>
@@ -801,6 +803,71 @@
       <span style="color:#d9d9d9;">|</span>
       <span>총 실지급액 <strong class="total-net">₩${totalNetSum.toLocaleString()}</strong></span>
     `;
+  }
+
+  // [신규] 세무신고용 강사별 합산 CSV 내보내기 함수
+  function exportTaxCombinedCSV() {
+    const records = getRecords();
+    const activeMonth = document.getElementById('activeMonth').value;
+
+    const monthRecords = records.filter(r => r.month === activeMonth);
+    if (monthRecords.length === 0) return alert(`${activeMonth} 월에 등록된 데이터가 없습니다.`);
+
+    // 강사 성명 + 생년월일 기준으로 그룹화
+    const grouped = {};
+    monthRecords.forEach(r => {
+      const key = `${r.name.trim()}_${(r.birth || '').trim()}`;
+      if (!grouped[key]) {
+        grouped[key] = {
+          name: r.name.trim(),
+          birth: (r.birth || '').trim(),
+          schools: [],
+          categories: [],
+          subjects: [],
+          totalGross: 0,
+          totalMaterial: 0
+        };
+      }
+      if (!grouped[key].schools.includes(r.school)) grouped[key].schools.push(r.school);
+      if (!grouped[key].categories.includes(r.category || '방과후')) grouped[key].categories.push(r.category || '방과후');
+      if (!grouped[key].subjects.includes(r.subject)) grouped[key].subjects.push(r.subject);
+
+      grouped[key].totalGross += (r.grossPay || 0);
+      grouped[key].totalMaterial += (r.material || 0);
+    });
+
+    // 강사명 가나다순 정렬
+    const list = Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+    // 합산 기준 정밀 세액 계산 및 CSV 생성
+    let csv = '\uFEFF귀속연월,강사명,주민번호(생년월일),근무학교목록,구분,과목명,총지급액(세전),재료비(비과세),과세대상소득,경비율공제후(80.7%),특고고용보험,산재보험료,사업소득세(3%),지방소득세(0.3%),총공제세액,차인지급액(실수령액)\n';
+
+    list.forEach(g => {
+      const gross = g.totalGross;
+      const mat = g.totalMaterial;
+      const taxable = gross; // 사업소득 총지급액
+
+      // 1인 합산 기준 세액 계산
+      const taxes = calculateItemTaxes(gross);
+      const totalDeduct = taxes.specialTax + taxes.indAccTax + taxes.incomeTax + taxes.localTax;
+
+      const schoolStr = `"${g.schools.join(', ')}"`;
+      const catStr = `"${g.categories.join(', ')}"`;
+      const subjStr = `"${g.subjects.join(', ')}"`;
+
+      csv += `${activeMonth},${g.name},${g.birth},${schoolStr},${catStr},${subjStr},${gross},${mat},${taxable},${taxes.stdPay},${taxes.specialTax},${taxes.indAccTax},${taxes.incomeTax},${taxes.localTax},${totalDeduct},${taxes.netPay}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `세무신고용_강사별합산급여대장_${activeMonth}.csv`;
+    link.click();
+
+    alert(
+      `✅ [세무신고용 강사별 합산 CSV]가 다운로드되었습니다!\n\n` +
+      `총 ${list.length}명의 강사로 합산되었으며, 세무사무실 또는 홈택스 원천세 신고 자료로 바로 활용하실 수 있습니다.`
+    );
   }
 
   function exportDataJs() {
@@ -904,7 +971,7 @@
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `급여지급대장_${document.getElementById('activeMonth').value}.csv`;
+    link.download = `학교별_급여지급대장_${document.getElementById('activeMonth').value}.csv`;
     link.click();
   }
 </script>
