@@ -525,7 +525,7 @@
 
   // =ROUNDDOWN(단가 / 완강차수 * 수업차수, -1) 계산 함수
   function calcRoundDownRate(baseRate, totalLessons, lessonStep) {
-    if (totalLessons === lessonStep) return baseRate; // 완강 시 본래 단가 유지
+    if (totalLessons === lessonStep) return baseRate;
     return Math.floor(((baseRate / totalLessons) * lessonStep) / 10) * 10;
   }
 
@@ -553,7 +553,6 @@
     } else if (category === '코디' || category === '안전관리자') {
       grossPay = rateOrSalary + material;
     } else if (is8) {
-      // 8회 완강: 각 회차별 ROUNDDOWN(단가 / 8 * 회차, -1) 적용
       let totalCoursePay = 0;
       for (let i = 1; i <= 8; i++) {
         const count = Number(document.getElementById(`e${i}`).value) || 0;
@@ -565,7 +564,6 @@
       }
       grossPay = totalCoursePay + material;
     } else if (is12) {
-      // 12회 완강: 각 회차별 ROUNDDOWN(단가 / 12 * 회차, -1) 적용
       let totalCoursePay = 0;
       for (let i = 1; i <= 12; i++) {
         const count = Number(document.getElementById(`c${i}`).value) || 0;
@@ -577,7 +575,6 @@
       }
       grossPay = totalCoursePay + material;
     } else {
-      // 4회 일반: 각 회차별 ROUNDDOWN(단가 / 4 * 회차, -1) 적용
       const w4 = (Number(document.getElementById('w4').value) || 0);
       const w3 = (Number(document.getElementById('w3').value) || 0);
       const w2 = (Number(document.getElementById('w2').value) || 0);
@@ -634,10 +631,21 @@
     const schoolFilter = document.getElementById('schoolFilter').value;
     const activeMonth = document.getElementById('activeMonth').value;
 
-    const filtered = records.filter(r => {
+    // 1. 월 및 학교 필터링
+    let filtered = records.filter(r => {
       const matchSchool = schoolFilter === '전체' || r.school === schoolFilter;
       const matchMonth = r.month === activeMonth;
       return matchSchool && matchMonth;
+    });
+
+    // 2. [핵심] 근무처(학교명) 가나다순 -> 강사명 가나다순 정렬
+    filtered.sort((a, b) => {
+      // 1순위: 근무처(학교명) 오름차순
+      const schoolComp = (a.school || '').localeCompare(b.school || '', 'ko');
+      if (schoolComp !== 0) return schoolComp;
+
+      // 2순위: 성명/강사명 오름차순
+      return (a.name || '').localeCompare(b.name || '', 'ko');
     });
 
     const tbody = document.getElementById('payrollTbody');
@@ -650,7 +658,7 @@
       const cat = item.category || '방과후';
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td>${item.school}</td>
+        <td style="font-weight:600; color:#1f1f1f;">${item.school}</td>
         <td><span class="badge-cat cat-${cat}">${cat}</span></td>
         <td>${item.subject}</td>
         <td><span class="name-link" onclick="openEditRecordModal(${item.id})" title="클릭하여 수정">${item.name}</span></td>
@@ -679,7 +687,12 @@
     const records = getRecords();
     if (records.length === 0) return alert('등록된 정산 내역이 없습니다.');
 
-    const exportList = records.map(r => ({
+    // data.js 내보낼 때도 근무처별 가나다순으로 깔끔하게 정렬
+    const exportList = [...records].sort((a, b) => {
+      const sComp = (a.school || '').localeCompare(b.school || '', 'ko');
+      if (sComp !== 0) return sComp;
+      return (a.name || '').localeCompare(b.name || '', 'ko');
+    }).map(r => ({
       school: r.school,
       category: r.category || '방과후',
       month: r.month,
@@ -758,8 +771,15 @@
 
   function exportCSV() {
     const records = getRecords();
+    // CSV 출력 시에도 근무처별 가나다순으로 정렬
+    const sorted = [...records].sort((a, b) => {
+      const sComp = (a.school || '').localeCompare(b.school || '', 'ko');
+      if (sComp !== 0) return sComp;
+      return (a.name || '').localeCompare(b.name || '', 'ko');
+    });
+
     let csv = '\uFEFF근무처,구분,과목명,성명,재료비,수업차시,지급계,경비율제외,특고료,산재보험료,소득세,주민세,실지급액\n';
-    records.forEach(r => {
+    sorted.forEach(r => {
       csv += `${r.school},${r.category || '방과후'},${r.subject},${r.name},${r.material},${r.lessons},${r.grossPay},${r.stdPay},${r.specialTax},${r.indAccTax},${r.incomeTax},${r.localTax},${r.netPay}\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
