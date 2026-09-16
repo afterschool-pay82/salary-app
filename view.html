@@ -36,7 +36,7 @@
 
     .container {
       width: 100%;
-      max-width: 580px;
+      max-width: 600px;
       background: #ffffff;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(250, 140, 22, 0.12), 0 1px 4px rgba(0, 0, 0, 0.05);
@@ -95,25 +95,51 @@
     .info-table th { width: 25%; background: #fffaf0; padding: 10px; text-align: left; color: #777; border: 1px solid #ffe7ba; }
     .info-table td { width: 25%; padding: 10px; border: 1px solid #ffe7ba; font-weight: 600; color: #222; }
 
-    /* 차수별 수강인원 박스 */
+    /* 차수별 수강인원 2열 레이아웃 */
     .counts-box { background: #fffaf0; border: 1px solid #ffd591; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; }
-    .counts-header { font-weight: bold; color: #d46b08; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-    .school-group-title { font-size: 13px; font-weight: 800; color: #d46b08; margin-top: 12px; margin-bottom: 8px; }
-    .school-group-title:first-child { margin-top: 0; }
-    .counts-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-    .count-chip { 
-      background: #fff; 
-      border: 1px solid #ffc069; 
-      padding: 7px 12px; 
-      border-radius: 6px; 
-      font-size: 12.5px; 
-      color: #333;
-      display: inline-flex;
-      align-items: center;
+    .counts-header { font-weight: bold; color: #d46b08; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+    
+    .counts-two-col { 
+      display: grid; 
+      grid-template-columns: repeat(2, 1fr); 
+      gap: 12px; 
+    }
+    @media (max-width: 480px) {
+      .counts-two-col { grid-template-columns: 1fr; }
+    }
+
+    .school-card {
+      background: #ffffff;
+      border: 1px solid #ffe7ba;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
       gap: 6px;
     }
-    .count-chip strong { color: #fa8c16; font-size: 13.5px; }
-    .chip-pay { color: #666; font-size: 12px; font-weight: 600; }
+    .school-group-title { 
+      font-size: 12.5px; 
+      font-weight: 800; 
+      color: #d46b08; 
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .counts-grid { display: flex; flex-direction: column; gap: 6px; }
+    .count-chip { 
+      background: #fffdfa; 
+      border: 1px solid #ffc069; 
+      padding: 6px 10px; 
+      border-radius: 6px; 
+      font-size: 12px; 
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .count-chip strong { color: #fa8c16; font-size: 13px; }
+    .chip-pay { color: #666; font-size: 11.5px; font-weight: 600; }
 
     .money-section-title { font-size: 14px; font-weight: bold; color: #1f1f1f; margin-bottom: 10px; }
     .calc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
@@ -154,7 +180,7 @@
 
     <div class="auth-input-wrap">
       <label for="birthInput">생년월일 (주민번호 앞 6자리)</label>
-      <input type="password" id="birthInput" class="auth-input" placeholder="예: 123456" maxlength="6" inputmode="numeric">
+      <input type="password" id="birthInput" class="auth-input" placeholder="예: 890113" maxlength="6" inputmode="numeric">
     </div>
 
     <button class="btn-auth" onclick="verifyUser()">명세서 확인하기</button>
@@ -175,6 +201,12 @@
         <td id="infoSchool">-</td>
         <th>성 명</th>
         <td id="infoName">-</td>
+      </tr>
+      <tr>
+        <th>생년월일</th>
+        <td id="infoBirth">-</td>
+        <th>입금계좌</th>
+        <td id="infoAccount">-</td>
       </tr>
       <tr id="rowWithSubject">
         <th>구 분</th>
@@ -197,7 +229,7 @@
         <span>■ 차수별 수강인원 현황</span>
         <span id="totalStudentsBadge" style="font-size:12px; color:#d46b08; font-weight:bold;"></span>
       </div>
-      <div id="countsContainer"></div>
+      <div id="countsContainer" class="counts-two-col"></div>
     </div>
 
     <div class="money-section-title" id="sectionTitleMoney">■ 정산 및 공제 상세 내역</div>
@@ -296,7 +328,7 @@
     const matchedList = db.filter(item => item.name === name && item.birth === birth);
 
     if (matchedList.length === 0) {
-      return alert("일치하는 급여 정보가 없습니다.\n성명(" + name + ")과 생년월일을 다시 확인해 주세요.");
+      return alert("일치하는 급여 정보가 없습니다.\n성명(" + name + ")과 생년월일(앞 6자리)을 다시 확인해 주세요.");
     }
 
     renderSlip(matchedList);
@@ -318,6 +350,14 @@
 
     document.getElementById('subTitleMonth').innerText = `${d.month || ''} 귀속 정산`;
     document.getElementById('infoName').innerText = d.name || '-';
+    document.getElementById('infoBirth').innerText = d.birth || '-';
+
+    const accItem = list.find(x => x.accountNumber) || d;
+    if (accItem.accountNumber) {
+      document.getElementById('infoAccount').innerText = `${accItem.bankName || ''} ${accItem.accountNumber}`;
+    } else {
+      document.getElementById('infoAccount').innerText = '-';
+    }
 
     const isFixedStaff = (rawCat === '코디' || rawCat === '안전관리자' || d.subject === '코디' || d.subject === '안전관리자');
     const rowWithSubject = document.getElementById('rowWithSubject');
@@ -362,7 +402,7 @@
     }
 
     // -------------------------------------------------------------
-    // 차수별 수강인원 및 금액(지급계) 계산 표출
+    // 차수별 수강인원 2열(한 줄에 2개씩) 카드 배치 로직
     // -------------------------------------------------------------
     const boxCounts = document.getElementById('boxCounts');
     const countsContainer = document.getElementById('countsContainer');
@@ -385,23 +425,24 @@
           hasAnyStudentCount = true;
           const displaySubj = normalizeSubjectName(item.subject);
 
+          // 한 학교를 담는 독립 카드 생성 (2열 그리드 배치)
+          const card = document.createElement('div');
+          card.className = 'school-card';
+
           const groupTitle = document.createElement('div');
           groupTitle.className = 'school-group-title';
           groupTitle.innerText = `● [${item.school}] ${displaySubj}`;
-          countsContainer.appendChild(groupTitle);
+          card.appendChild(groupTitle);
 
           const grid = document.createElement('div');
           grid.className = 'counts-grid';
 
-          // 총 수수료 (재료비 제외)
           const coursePayOnly = (item.grossPay || 0) - (item.material || 0);
 
-          // 완강 기준 차수 결정
           let totalMaxLessons = 4;
           if (validKeys.some(k => k.startsWith('c'))) totalMaxLessons = 12;
           else if (validKeys.some(k => k.startsWith('e'))) totalMaxLessons = 8;
 
-          // 1. 단가 확인 (baseRate가 있으면 최우선 사용, 없으면 역산하되 10원 단위 반올림으로 정확한 단가 복원)
           let effectiveBaseRate = Number(item.baseRate) || 0;
           if (!effectiveBaseRate && coursePayOnly > 0) {
             let totalWeightedSteps = 0;
@@ -420,7 +461,6 @@
             const num = parseInt(k.replace(/[^0-9]/g, ''), 10);
             totalStudentsSum += count;
 
-            // 대장과 100% 동일한 회차별 절사 공식: FLOOR((baseRate / totalMaxLessons * num), 10)
             let stepRate = effectiveBaseRate;
             if (totalMaxLessons !== num && effectiveBaseRate > 0) {
               stepRate = Math.floor(((effectiveBaseRate / totalMaxLessons) * num) / 10) * 10;
@@ -440,7 +480,8 @@
             grid.appendChild(chip);
           });
 
-          countsContainer.appendChild(grid);
+          card.appendChild(grid);
+          countsContainer.appendChild(card);
         }
       }
     });
@@ -452,9 +493,7 @@
       boxCounts.style.display = 'none';
     }
 
-    // -------------------------------------------------------------
-    // 금액 및 공제액 계산
-    // -------------------------------------------------------------
+    // 금액 계산
     let grossPay = 0;
     let material = 0;
 
