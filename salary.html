@@ -16,9 +16,16 @@
     .action-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
     .school-filter { padding: 6px 12px; font-size: 13px; border: 1px solid #d9d9d9; border-radius: 4px; min-width: 110px; outline: none; }
     
+    .search-input { width: 140px; height: 34px; padding: 0 10px; border: 1.5px solid #adc6ff; border-radius: 4px; font-size: 13px; outline: none; }
+    .search-input:focus { border-color: #2f54eb; }
+
     .btn { padding: 7px 14px; font-size: 13px; font-weight: 600; border-radius: 4px; border: 1px solid #d9d9d9; background: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
-    .btn-primary { background: #2f54eb; color: #fff; border-color: #2f54eb; }
-    .btn-primary:hover { background: #1d39c4; }
+    .btn-search { background: #2f54eb; color: #fff; border-color: #2f54eb; font-weight: bold; }
+    .btn-search:hover { background: #1d39c4; }
+    .btn-reset { background: #f5f5f5; color: #555; }
+    .btn-reset:hover { background: #e8e8e8; }
+    .btn-primary { background: #1890ff; color: #fff; border-color: #1890ff; }
+    .btn-primary:hover { background: #096dd9; }
     .btn-recalc { background: #722ed1; color: #fff; border-color: #722ed1; font-weight: bold; }
     .btn-recalc:hover { background: #531dab; }
     .btn-tax { background: #13c2c2; color: #fff; border-color: #13c2c2; font-weight: bold; }
@@ -105,6 +112,12 @@
 
   <div class="action-bar">
     <select id="schoolFilter" class="school-filter" onchange="renderTable()"></select>
+    
+    <!-- 강사명 검색 바 -->
+    <input type="text" id="teacherSearchInput" class="search-input" placeholder="강사명 검색" onkeyup="if(event.key==='Enter') searchTeacher();">
+    <button class="btn btn-search" onclick="searchTeacher()">조회</button>
+    <button class="btn btn-reset" onclick="resetTeacherSearch()">전체보기</button>
+
     <button class="btn btn-primary" onclick="openRecordModal()">정산 등록 (방과후/맞춤형/코디/안전)</button>
     <button class="btn btn-recalc" onclick="recalculateAllData(true)">⚡ 전체 데이터 일괄 재계산</button>
     <button class="btn btn-tax" onclick="exportTaxCombinedCSV()">📊 세무신고용 강사별 합산 CSV</button>
@@ -339,6 +352,7 @@
   };
 
   let currentEditId = null;
+  let currentSearchQuery = '';
 
   const defaultSchoolSettings = {
     '창영초': { '피아노': '12', '피아노2': '12', '영어': '8', '영어2': '12', '수학': '12', '컴퓨터1': '4', '컴퓨터2': '8' },
@@ -353,6 +367,17 @@
     initSchoolDropdowns();
     recalculateAllData(false);
   };
+
+  function searchTeacher() {
+    currentSearchQuery = document.getElementById('teacherSearchInput').value.trim();
+    renderTable();
+  }
+
+  function resetTeacherSearch() {
+    currentSearchQuery = '';
+    document.getElementById('teacherSearchInput').value = '';
+    renderTable();
+  }
 
   function formatRRN(el) {
     let v = el.value.replace(/[^0-9]/g, '');
@@ -715,7 +740,6 @@
 
     if (!name.trim()) return alert('성명/강사명을 입력하세요.');
 
-    // 앞 6자리 생년월일 추출
     const pureRrn = rrnInput.replace(/[^0-9]/g, '');
     const birth = pureRrn.length >= 6 ? pureRrn.slice(0, 6) : rrnInput;
 
@@ -776,8 +800,8 @@
 
     const recordData = {
       school, category, month, subject, name, 
-      rrn: rrnInput, // 13자리 전체 (세무용)
-      birth: birth,   // 앞 6자리 (명세서용)
+      rrn: rrnInput,
+      birth: birth,
       bankName, bankCode, accountNumber,
       material, lessons: displayLessons,
       baseRate: rateOrSalary, counts, note,
@@ -814,7 +838,8 @@
     let filtered = records.filter(r => {
       const matchSchool = schoolFilter === '전체' || r.school === schoolFilter;
       const matchMonth = r.month === activeMonth;
-      return matchSchool && matchMonth;
+      const matchSearch = !currentSearchQuery || (r.name && r.name.includes(currentSearchQuery));
+      return matchSchool && matchMonth && matchSearch;
     });
 
     filtered.sort((a, b) => {
@@ -837,7 +862,6 @@
       const bInfo = item.bankName ? `${item.bankName}` : '-';
       const aInfo = item.accountNumber ? `${item.accountNumber}` : '-';
 
-      // 주민번호 마스킹 표시 (화면에서는 앞6자리-뒷1자리****** 표출)
       let rrnMasked = '-';
       const pure = (item.rrn || item.birth || '').replace(/[^0-9]/g, '');
       if (pure.length >= 7) {
@@ -871,8 +895,9 @@
       tbody.appendChild(row);
     });
 
+    const searchNotice = currentSearchQuery ? ` [검색어: "${currentSearchQuery}"]` : '';
     document.getElementById('summaryCounter').innerHTML = `
-      <span>전체 ${filtered.length}명</span>
+      <span>전체 ${filtered.length}건${searchNotice}</span>
       <span style="color:#d9d9d9;">|</span>
       <span>총 지급계 <strong class="total-gross">₩${totalGrossSum.toLocaleString()}</strong></span>
       <span style="color:#d9d9d9;">|</span>
@@ -880,7 +905,6 @@
     `;
   }
 
-  // [핵심] 세무신고용 CSV 내보내기 (주민번호 13자리 전체 출력)
   function exportTaxCombinedCSV() {
     const records = getRecords();
     const activeMonth = document.getElementById('activeMonth').value;
@@ -890,7 +914,6 @@
 
     const grouped = {};
     monthRecords.forEach(r => {
-      // 주민번호 또는 생년월일 기준 그룹화
       const pureRrn = (r.rrn || r.birth || '').replace(/[^0-9]/g, '');
       const key = `${r.name.trim()}_${pureRrn.slice(0, 6)}`;
 
@@ -954,7 +977,6 @@
     );
   }
 
-  // [핵심] 온라인 명세서용 data.js 발행 (주민번호 뒷자리는 자동 제거, 앞 6자리만 안전 저장)
   function exportDataJs() {
     const records = getRecords();
     if (records.length === 0) return alert('등록된 정산 내역이 없습니다.');
@@ -964,7 +986,6 @@
       if (sComp !== 0) return sComp;
       return (a.name || '').localeCompare(b.name || '', 'ko');
     }).map(r => {
-      // 주민번호 뒷자리 필터링: 앞 6자리만 추출하여 birth로 저장
       const rawId = (r.rrn || r.birth || '').replace(/[^0-9]/g, '');
       const safeBirth = rawId.length >= 6 ? rawId.slice(0, 6) : rawId;
 
@@ -974,7 +995,7 @@
         month: r.month,
         subject: r.subject,
         name: r.name.trim(),
-        birth: safeBirth, // 온라인 공개용은 오직 앞 6자리만 저장
+        birth: safeBirth,
         bankName: r.bankName || '',
         accountNumber: r.accountNumber || '',
         material: r.material,
