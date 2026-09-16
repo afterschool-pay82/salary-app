@@ -27,7 +27,21 @@
     .btn-setting:hover { background: #389e0d; }
     .checkbox-label { margin-left: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     
-    .summary-text { font-size: 13px; color: #666; margin-bottom: 12px; font-weight: 600; }
+    .summary-text { 
+      font-size: 14px; 
+      color: #555; 
+      margin-bottom: 12px; 
+      font-weight: 600; 
+      background: #fafafa;
+      border: 1px solid #f0f0f0;
+      padding: 8px 14px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .summary-text strong.total-gross { color: #1f1f1f; }
+    .summary-text strong.total-net { color: #1890ff; font-weight: 800; }
     
     table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
     th { background: #fafafa; color: #262626; font-weight: 600; border: 1px solid #e8e8e8; padding: 9px 4px; }
@@ -105,7 +119,13 @@
     <button class="btn btn-publish" onclick="exportDataJs()">📢 명세서 데이터 발행 (data.js 저장)</button>
   </div>
 
-  <div class="summary-text" id="summaryCounter">전체 0명, 총 지급계 ₩0</div>
+  <div class="summary-text" id="summaryCounter">
+    <span>전체 0명</span>
+    <span>|</span>
+    <span>총 지급계 <strong class="total-gross">₩0</strong></span>
+    <span>|</span>
+    <span>총 실지급액 <strong class="total-net">₩0</strong></span>
+  </div>
 
   <table>
     <thead>
@@ -528,7 +548,6 @@
     const schoolMap = settings[currentSchool] || {};
     
     let mode = '4';
-    // 긴 단어(피아노2, 컴퓨터2, 컴퓨터1, 영어2)부터 매칭하여 정확히 분기
     for (const key of ['피아노2', '컴퓨터2', '컴퓨터1', '영어2', '피아노', '영어', '수학', '컴퓨터']) {
       if (currentSubject.includes(key)) {
         if (key === '컴퓨터') {
@@ -743,10 +762,13 @@
     const tbody = document.getElementById('payrollTbody');
     tbody.innerHTML = '';
 
-    let totalSum = 0;
+    let totalGrossSum = 0;
+    let totalNetSum = 0;
 
     filtered.forEach(item => {
-      totalSum += item.grossPay;
+      totalGrossSum += (item.grossPay || 0);
+      totalNetSum += (item.netPay || 0);
+
       const cat = item.category || '방과후';
       const row = document.createElement('tr');
       row.innerHTML = `
@@ -771,8 +793,14 @@
       tbody.appendChild(row);
     });
 
-    document.getElementById('summaryCounter').innerText = 
-      `전체 ${filtered.length}명, 총 지급계 ₩${totalSum.toLocaleString()}`;
+    // 상단 요약 바 업데이트 (지급계 + 실지급액계)
+    document.getElementById('summaryCounter').innerHTML = `
+      <span>전체 ${filtered.length}명</span>
+      <span style="color:#d9d9d9;">|</span>
+      <span>총 지급계 <strong class="total-gross">₩${totalGrossSum.toLocaleString()}</strong></span>
+      <span style="color:#d9d9d9;">|</span>
+      <span>총 실지급액 <strong class="total-net">₩${totalNetSum.toLocaleString()}</strong></span>
+    `;
   }
 
   function exportDataJs() {
