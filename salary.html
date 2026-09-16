@@ -6,7 +6,7 @@
   <style>
     * { box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", helvetica, sans-serif; background: #eef1f5; margin: 0; padding: 20px; color: #333; }
-    .main-wrapper { max-width: 1540px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .main-wrapper { max-width: 1720px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
     
     .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .title-area { display: flex; align-items: center; gap: 12px; }
@@ -27,7 +27,6 @@
     .btn-publish:hover { background: #d46b08; }
     .btn-setting { background: #52c41a; color: #fff; border-color: #52c41a; }
     .btn-setting:hover { background: #389e0d; }
-    .checkbox-label { margin-left: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     
     .summary-text { 
       font-size: 14px; 
@@ -58,12 +57,11 @@
     .cat-코디 { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
     .cat-안전관리자 { background: #f9f0ff; color: #722ed1; border: 1px solid #d3adf7; }
 
-    .btn-print { border: 1px solid #d9d9d9; background: #fff; color: #1890ff; padding: 4px 7px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; }
-    .btn-del { border: 1px solid #ffa39e; background: #fff1f0; color: #f5222d; padding: 4px 7px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; margin-left: 3px; }
+    .btn-del { border: 1px solid #ffa39e; background: #fff1f0; color: #f5222d; padding: 4px 9px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; }
 
-    /* 모달 공통 */
+    /* 모달 */
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 1000; justify-content: center; align-items: center; }
-    .modal-content { background: #fff; width: 940px; border-radius: 8px; padding: 24px 28px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); max-height: 94vh; overflow-y: auto; }
+    .modal-content { background: #fff; width: 960px; border-radius: 8px; padding: 24px 28px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); max-height: 94vh; overflow-y: auto; }
     .modal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; }
     .close-icon { font-size: 20px; cursor: pointer; border: none; background: none; color: #999; }
     
@@ -75,6 +73,9 @@
     .input-item label { font-size: 13px; color: #333; width: 110px; flex-shrink: 0; }
     .input-item input, .input-item select { width: 100%; height: 34px; padding: 0 10px; border: 1px solid #d9d9d9; border-radius: 4px; font-size: 13px; outline: none; }
     
+    .bank-box { background: #f9f0ff; padding: 12px 16px; border-radius: 6px; border: 1px solid #d3adf7; margin-bottom: 14px; }
+    .bank-title { font-size: 12.5px; font-weight: bold; color: #722ed1; margin-bottom: 8px; }
+
     .grid-wrap { background: #fafafa; padding: 14px; border-radius: 6px; border: 1px solid #eee; margin-bottom: 14px; }
     .grid-4w { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
     .grid-8w { display: grid; grid-template-columns: repeat(4, 1fr); column-gap: 12px; row-gap: 8px; }
@@ -90,12 +91,6 @@
     .setting-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
     .setting-table th { background: #f0f2f5; padding: 10px; border: 1px solid #d9d9d9; }
     .setting-table td { padding: 10px; border: 1px solid #d9d9d9; text-align: center; }
-
-    @media print {
-      body * { visibility: hidden; }
-      #printArea, #printArea * { visibility: visible; }
-      #printArea { position: absolute; left: 0; top: 0; width: 100%; }
-    }
   </style>
 </head>
 <body>
@@ -116,9 +111,6 @@
     <button class="btn btn-setting" onclick="openSchoolSettingModal()">학교별 회차 설정</button>
     <button class="btn" onclick="addNewSchoolPrompt()">+ 학교 등록</button>
     <button class="btn" onclick="exportCSV()">학교별 대장 CSV 저장</button>
-    <label class="checkbox-label">
-      <input type="checkbox" id="chkOnlyNetPay" onchange="toggleColumns()"> 실지급액만 보기
-    </label>
     <button class="btn btn-publish" onclick="exportDataJs()">📢 명세서 데이터 발행 (data.js 저장)</button>
   </div>
 
@@ -137,17 +129,20 @@
         <th rowspan="2">구분</th>
         <th rowspan="2">과목명(역할)</th>
         <th rowspan="2">강사/인력명</th>
-        <th rowspan="2" class="detail-col">재료비</th>
-        <th rowspan="2" class="detail-col">수업차시</th>
+        <th rowspan="2">주민등록번호</th>
+        <th rowspan="2">은행</th>
+        <th rowspan="2">계좌번호</th>
+        <th rowspan="2">재료비</th>
+        <th rowspan="2">수업차시</th>
         <th rowspan="2">지급계</th>
-        <th rowspan="2" class="detail-col">경비율제외<br>(19.3% 공제)</th>
-        <th rowspan="2" class="detail-col">특고료</th>
-        <th rowspan="2" class="detail-col">산재<br>보험료</th>
-        <th colspan="2" class="detail-col">공제액</th>
+        <th rowspan="2">경비율제외<br>(19.3% 공제)</th>
+        <th rowspan="2">특고료</th>
+        <th rowspan="2">산재<br>보험료</th>
+        <th colspan="2">공제액</th>
         <th rowspan="2">실지급액</th>
         <th rowspan="2">관리</th>
       </tr>
-      <tr class="detail-col">
+      <tr>
         <th>소득세</th>
         <th>주민세</th>
       </tr>
@@ -214,8 +209,8 @@
         <input type="month" id="modalMonth" value="2026-08">
       </div>
       <div class="input-item">
-        <label>생년월일</label>
-        <input type="text" id="birth" placeholder="예: 123456">
+        <label style="font-weight:bold; color:#1d39c4;">주민등록번호</label>
+        <input type="text" id="rrn" placeholder="13자리 (예: 890113-*******)" maxlength="14" oninput="formatRRN(this)">
       </div>
     </div>
 
@@ -231,6 +226,48 @@
       <div class="input-item">
         <label id="rateLabel" style="font-weight:bold; color:#2f54eb;">기준 수수료</label>
         <input type="number" id="baseRate" value="26000" style="font-weight:bold;">
+      </div>
+    </div>
+
+    <!-- 계좌 정보 섹션 -->
+    <div class="bank-box">
+      <div class="bank-title">💳 급여 입금 계좌 정보</div>
+      <div class="row-grid-3" style="margin-bottom:0;">
+        <div class="input-item">
+          <label>은행명</label>
+          <input type="text" id="bankName" list="bankList" placeholder="선택 또는 직접입력" onchange="onBankChange()">
+          <datalist id="bankList">
+            <option value="국민은행" data-code="004">004</option>
+            <option value="신한은행" data-code="088">088</option>
+            <option value="우리은행" data-code="020">020</option>
+            <option value="하나은행" data-code="081">081</option>
+            <option value="농협은행" data-code="011">011</option>
+            <option value="지역농축협" data-code="012">012</option>
+            <option value="기업은행" data-code="003">003</option>
+            <option value="카카오뱅크" data-code="090">090</option>
+            <option value="토스뱅크" data-code="092">092</option>
+            <option value="케이뱅크" data-code="089">089</option>
+            <option value="SC제일은행" data-code="023">023</option>
+            <option value="씨티은행" data-code="027">027</option>
+            <option value="우체국" data-code="071">071</option>
+            <option value="새마을금고" data-code="045">045</option>
+            <option value="신협" data-code="048">048</option>
+            <option value="수협은행" data-code="007">007</option>
+            <option value="부산은행" data-code="032">032</option>
+            <option value="대구은행" data-code="031">031</option>
+            <option value="경남은행" data-code="039">039</option>
+            <option value="광주은행" data-code="034">034</option>
+            <option value="전북은행" data-code="035">035</option>
+          </datalist>
+        </div>
+        <div class="input-item">
+          <label>은행코드</label>
+          <input type="text" id="bankCode" placeholder="예: 004">
+        </div>
+        <div class="input-item">
+          <label>계좌번호</label>
+          <input type="text" id="accountNumber" placeholder="'-' 없이 숫자만 입력">
+        </div>
       </div>
     </div>
 
@@ -288,12 +325,18 @@
   </div>
 </div>
 
-<div id="printArea" style="display:none;"></div>
-
 <script>
   const STORAGE_KEY = 'afterschool_master_data_v5';
   const SCHOOL_KEY = 'afterschool_master_schools_v5';
   const SETTING_KEY = 'afterschool_school_subjects_setting_v5';
+
+  const bankCodeMap = {
+    '국민은행': '004', '신한은행': '088', '우리은행': '020', '하나은행': '081',
+    '농협은행': '011', '지역농축협': '012', '기업은행': '003', '카카오뱅크': '090',
+    '토스뱅크': '092', '케이뱅크': '089', 'SC제일은행': '023', '씨티은행': '027',
+    '우체국': '071', '새마을금고': '045', '신협': '048', '수협은행': '007',
+    '부산은행': '032', '대구은행': '031', '경남은행': '039', '광주은행': '034', '전북은행': '035'
+  };
 
   let currentEditId = null;
 
@@ -302,19 +345,30 @@
     '청량초': { '피아노': '12', '피아노2': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터1': '4', '컴퓨터2': '8' }
   };
 
-  const defaultData = [
-    { id: 1, school: '청량초', category: '방과후', month: '2026-08', subject: '축구교실', name: '조은이', birth: '890113', material: 0, lessons: '4', baseRate: 26000, counts: { w4: 27 }, grossPay: 702000, stdPay: 566514, specialTax: 0, indAccTax: 1860, incomeTax: 21060, localTax: 2100, netPay: 676980 },
-    { id: 2, school: '창영초', category: '방과후', month: '2026-08', subject: '놀이영어(늘봄)', name: '정혜숙', birth: '781105', material: 0, lessons: '8', baseRate: 40000, counts: { e8: 8 }, grossPay: 320000, stdPay: 258240, specialTax: 0, indAccTax: 850, incomeTax: 9600, localTax: 960, netPay: 308590 }
-  ];
-
   window.onload = function() {
-    if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+    if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     if (!localStorage.getItem(SCHOOL_KEY)) localStorage.setItem(SCHOOL_KEY, JSON.stringify(['창영초', '청량초']));
     if (!localStorage.getItem(SETTING_KEY)) localStorage.setItem(SETTING_KEY, JSON.stringify(defaultSchoolSettings));
     
     initSchoolDropdowns();
     recalculateAllData(false);
   };
+
+  function formatRRN(el) {
+    let v = el.value.replace(/[^0-9]/g, '');
+    if (v.length > 6) {
+      el.value = v.slice(0, 6) + '-' + v.slice(6, 13);
+    } else {
+      el.value = v;
+    }
+  }
+
+  function onBankChange() {
+    const bName = document.getElementById('bankName').value.trim();
+    if (bankCodeMap[bName]) {
+      document.getElementById('bankCode').value = bankCodeMap[bName];
+    }
+  }
 
   function getRecords() { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
   
@@ -450,9 +504,12 @@
 
     setRadioVal('calcCategory', '방과후');
     document.getElementById('modalMonth').value = document.getElementById('activeMonth').value;
-    document.getElementById('birth').value = '';
+    document.getElementById('rrn').value = '';
     document.getElementById('subject').value = '축구교실';
     document.getElementById('name').value = '';
+    document.getElementById('bankName').value = '';
+    document.getElementById('bankCode').value = '';
+    document.getElementById('accountNumber').value = '';
     document.getElementById('baseRate').value = '26000';
     document.getElementById('material').value = '0';
     document.getElementById('displayLessons').value = '4';
@@ -475,9 +532,12 @@
     setRadioVal('calcCategory', item.category || '방과후');
     document.getElementById('modalSchool').value = item.school;
     document.getElementById('modalMonth').value = item.month;
-    document.getElementById('birth').value = item.birth || '';
+    document.getElementById('rrn').value = item.rrn || item.birth || '';
     document.getElementById('subject').value = item.subject || '';
     document.getElementById('name').value = item.name || '';
+    document.getElementById('bankName').value = item.bankName || '';
+    document.getElementById('bankCode').value = item.bankCode || '';
+    document.getElementById('accountNumber').value = item.accountNumber || '';
     document.getElementById('baseRate').value = item.baseRate !== undefined ? item.baseRate : item.grossPay;
     document.getElementById('material').value = item.material || 0;
     document.getElementById('displayLessons').value = item.lessons || '4';
@@ -642,15 +702,22 @@
     const category = getRadioVal('calcCategory');
     const school = document.getElementById('modalSchool').value;
     const month = document.getElementById('modalMonth').value;
-    const birth = document.getElementById('birth').value;
+    const rrnInput = document.getElementById('rrn').value.trim();
     const subject = document.getElementById('subject').value;
     const name = document.getElementById('name').value;
+    const bankName = document.getElementById('bankName').value.trim();
+    const bankCode = document.getElementById('bankCode').value.trim();
+    const accountNumber = document.getElementById('accountNumber').value.trim();
     const rateOrSalary = Number(document.getElementById('baseRate').value) || 0;
     const material = Number(document.getElementById('material').value) || 0;
     let displayLessons = document.getElementById('displayLessons').value.trim();
     const note = document.getElementById('note').value;
 
     if (!name.trim()) return alert('성명/강사명을 입력하세요.');
+
+    // 앞 6자리 생년월일 추출
+    const pureRrn = rrnInput.replace(/[^0-9]/g, '');
+    const birth = pureRrn.length >= 6 ? pureRrn.slice(0, 6) : rrnInput;
 
     let grossPay = 0;
     const counts = {};
@@ -707,36 +774,30 @@
     const taxes = calculateItemTaxes(grossPay);
     const records = getRecords();
 
+    const recordData = {
+      school, category, month, subject, name, 
+      rrn: rrnInput, // 13자리 전체 (세무용)
+      birth: birth,   // 앞 6자리 (명세서용)
+      bankName, bankCode, accountNumber,
+      material, lessons: displayLessons,
+      baseRate: rateOrSalary, counts, note,
+      grossPay,
+      stdPay: taxes.stdPay,
+      specialTax: taxes.specialTax,
+      indAccTax: taxes.indAccTax,
+      incomeTax: taxes.incomeTax,
+      localTax: taxes.localTax,
+      netPay: taxes.netPay
+    };
+
     if (currentEditId) {
       const idx = records.findIndex(r => r.id === currentEditId);
       if (idx !== -1) {
-        records[idx] = {
-          ...records[idx],
-          school, category, month, subject, name, birth, material, lessons: displayLessons,
-          baseRate: rateOrSalary, counts, note,
-          grossPay,
-          stdPay: taxes.stdPay,
-          specialTax: taxes.specialTax,
-          indAccTax: taxes.indAccTax,
-          incomeTax: taxes.incomeTax,
-          localTax: taxes.localTax,
-          netPay: taxes.netPay
-        };
+        records[idx] = { ...records[idx], ...recordData };
       }
       alert(`[${name}] 님의 정보가 수정되었습니다.`);
     } else {
-      records.push({
-        id: Date.now(),
-        school, category, month, subject, name, birth, material, lessons: displayLessons,
-        baseRate: rateOrSalary, counts, note,
-        grossPay,
-        stdPay: taxes.stdPay,
-        specialTax: taxes.specialTax,
-        indAccTax: taxes.indAccTax,
-        incomeTax: taxes.incomeTax,
-        localTax: taxes.localTax,
-        netPay: taxes.netPay
-      });
+      records.push({ id: Date.now(), ...recordData });
       alert(`[${name}] 님이 등록되었습니다.`);
     }
 
@@ -773,23 +834,37 @@
       totalNetSum += (item.netPay || 0);
 
       const cat = item.category || '방과후';
+      const bInfo = item.bankName ? `${item.bankName}` : '-';
+      const aInfo = item.accountNumber ? `${item.accountNumber}` : '-';
+
+      // 주민번호 마스킹 표시 (화면에서는 앞6자리-뒷1자리****** 표출)
+      let rrnMasked = '-';
+      const pure = (item.rrn || item.birth || '').replace(/[^0-9]/g, '');
+      if (pure.length >= 7) {
+        rrnMasked = pure.slice(0, 6) + '-' + pure.slice(6, 7) + '******';
+      } else if (pure.length >= 6) {
+        rrnMasked = pure.slice(0, 6);
+      }
+
       const row = document.createElement('tr');
       row.innerHTML = `
         <td style="font-weight:600; color:#1f1f1f;">${item.school}</td>
         <td><span class="badge-cat cat-${cat}">${cat}</span></td>
         <td>${item.subject}</td>
         <td><span class="name-link" onclick="openEditRecordModal(${item.id})" title="클릭하여 수정">${item.name}</span></td>
-        <td class="money-col detail-col">${item.material.toLocaleString()}</td>
-        <td class="detail-col">${item.lessons}</td>
+        <td style="font-family:-apple-system, sans-serif; font-size:11.5px;">${rrnMasked}</td>
+        <td style="font-size:11.5px; color:#555;">${bInfo}</td>
+        <td style="font-size:11.5px; font-family:-apple-system, sans-serif;">${aInfo}</td>
+        <td class="money-col">${item.material.toLocaleString()}</td>
+        <td>${item.lessons}</td>
         <td class="money-col" style="font-weight:bold;">${item.grossPay.toLocaleString()}</td>
-        <td class="money-col detail-col">${item.stdPay.toLocaleString()}</td>
-        <td class="money-col detail-col">${item.specialTax ? item.specialTax.toLocaleString() : '0'}</td>
-        <td class="money-col detail-col">${item.indAccTax.toLocaleString()}</td>
-        <td class="money-col detail-col">${item.incomeTax.toLocaleString()}</td>
-        <td class="money-col detail-col">${item.localTax.toLocaleString()}</td>
+        <td class="money-col">${item.stdPay.toLocaleString()}</td>
+        <td class="money-col">${item.specialTax ? item.specialTax.toLocaleString() : '0'}</td>
+        <td class="money-col">${item.indAccTax.toLocaleString()}</td>
+        <td class="money-col">${item.incomeTax.toLocaleString()}</td>
+        <td class="money-col">${item.localTax.toLocaleString()}</td>
         <td class="money-col highlight-blue">${item.netPay.toLocaleString()}</td>
         <td>
-          <button class="btn-print" onclick="printPayslip(${item.id})">인쇄</button>
           <button class="btn-del" onclick="deleteItem(${item.id})">삭제</button>
         </td>
       `;
@@ -805,7 +880,7 @@
     `;
   }
 
-  // [신규] 세무신고용 강사별 합산 CSV 내보내기 함수
+  // [핵심] 세무신고용 CSV 내보내기 (주민번호 13자리 전체 출력)
   function exportTaxCombinedCSV() {
     const records = getRecords();
     const activeMonth = document.getElementById('activeMonth').value;
@@ -813,14 +888,19 @@
     const monthRecords = records.filter(r => r.month === activeMonth);
     if (monthRecords.length === 0) return alert(`${activeMonth} 월에 등록된 데이터가 없습니다.`);
 
-    // 강사 성명 + 생년월일 기준으로 그룹화
     const grouped = {};
     monthRecords.forEach(r => {
-      const key = `${r.name.trim()}_${(r.birth || '').trim()}`;
+      // 주민번호 또는 생년월일 기준 그룹화
+      const pureRrn = (r.rrn || r.birth || '').replace(/[^0-9]/g, '');
+      const key = `${r.name.trim()}_${pureRrn.slice(0, 6)}`;
+
       if (!grouped[key]) {
         grouped[key] = {
           name: r.name.trim(),
-          birth: (r.birth || '').trim(),
+          rrn: r.rrn || r.birth || '',
+          bankName: r.bankName || '',
+          bankCode: r.bankCode || '',
+          accountNumber: r.accountNumber || '',
           schools: [],
           categories: [],
           subjects: [],
@@ -828,6 +908,11 @@
           totalMaterial: 0
         };
       }
+      if (!grouped[key].rrn && r.rrn) grouped[key].rrn = r.rrn;
+      if (!grouped[key].bankName && r.bankName) grouped[key].bankName = r.bankName;
+      if (!grouped[key].bankCode && r.bankCode) grouped[key].bankCode = r.bankCode;
+      if (!grouped[key].accountNumber && r.accountNumber) grouped[key].accountNumber = r.accountNumber;
+
       if (!grouped[key].schools.includes(r.school)) grouped[key].schools.push(r.school);
       if (!grouped[key].categories.includes(r.category || '방과후')) grouped[key].categories.push(r.category || '방과후');
       if (!grouped[key].subjects.includes(r.subject)) grouped[key].subjects.push(r.subject);
@@ -836,26 +921,25 @@
       grouped[key].totalMaterial += (r.material || 0);
     });
 
-    // 강사명 가나다순 정렬
     const list = Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 
-    // 합산 기준 정밀 세액 계산 및 CSV 생성
-    let csv = '\uFEFF귀속연월,강사명,주민번호(생년월일),근무학교목록,구분,과목명,총지급액(세전),재료비(비과세),과세대상소득,경비율공제후(80.7%),특고고용보험,산재보험료,사업소득세(3%),지방소득세(0.3%),총공제세액,차인지급액(실수령액)\n';
+    let csv = '\uFEFF귀속연월,강사명,주민등록번호(13자리),은행명,은행코드,계좌번호,근무학교목록,구분,과목명,총지급액(세전),재료비(비과세),과세대상소득,경비율공제후(80.7%),특고고용보험,산재보험료,사업소득세(3%),지방소득세(0.3%),총공제세액,차인지급액(실수령액)\n';
 
     list.forEach(g => {
       const gross = g.totalGross;
       const mat = g.totalMaterial;
-      const taxable = gross; // 사업소득 총지급액
+      const taxable = gross;
 
-      // 1인 합산 기준 세액 계산
       const taxes = calculateItemTaxes(gross);
       const totalDeduct = taxes.specialTax + taxes.indAccTax + taxes.incomeTax + taxes.localTax;
 
       const schoolStr = `"${g.schools.join(', ')}"`;
       const catStr = `"${g.categories.join(', ')}"`;
       const subjStr = `"${g.subjects.join(', ')}"`;
+      const rrnStr = g.rrn ? `\t${g.rrn}` : '';
+      const accStr = g.accountNumber ? `\t${g.accountNumber}` : '';
 
-      csv += `${activeMonth},${g.name},${g.birth},${schoolStr},${catStr},${subjStr},${gross},${mat},${taxable},${taxes.stdPay},${taxes.specialTax},${taxes.indAccTax},${taxes.incomeTax},${taxes.localTax},${totalDeduct},${taxes.netPay}\n`;
+      csv += `${activeMonth},${g.name},${rrnStr},${g.bankName},${g.bankCode},${accStr},${schoolStr},${catStr},${subjStr},${gross},${mat},${taxable},${taxes.stdPay},${taxes.specialTax},${taxes.indAccTax},${taxes.incomeTax},${taxes.localTax},${totalDeduct},${taxes.netPay}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -866,10 +950,11 @@
 
     alert(
       `✅ [세무신고용 강사별 합산 CSV]가 다운로드되었습니다!\n\n` +
-      `총 ${list.length}명의 강사로 합산되었으며, 세무사무실 또는 홈택스 원천세 신고 자료로 바로 활용하실 수 있습니다.`
+      `총 ${list.length}명의 강사 주민번호 13자리 전체 및 계좌정보가 포함되어 원천세 신고 자료로 바로 활용하실 수 있습니다.`
     );
   }
 
+  // [핵심] 온라인 명세서용 data.js 발행 (주민번호 뒷자리는 자동 제거, 앞 6자리만 안전 저장)
   function exportDataJs() {
     const records = getRecords();
     if (records.length === 0) return alert('등록된 정산 내역이 없습니다.');
@@ -878,25 +963,33 @@
       const sComp = (a.school || '').localeCompare(b.school || '', 'ko');
       if (sComp !== 0) return sComp;
       return (a.name || '').localeCompare(b.name || '', 'ko');
-    }).map(r => ({
-      school: r.school,
-      category: r.category || '방과후',
-      month: r.month,
-      subject: r.subject,
-      name: r.name.trim(),
-      birth: (r.birth || '').trim(),
-      material: r.material,
-      lessons: r.lessons,
-      baseRate: r.baseRate || 0,
-      counts: r.counts || {},
-      grossPay: r.grossPay,
-      stdPay: r.stdPay,
-      specialTax: r.specialTax,
-      indAccTax: r.indAccTax,
-      incomeTax: r.incomeTax,
-      localTax: r.localTax,
-      netPay: r.netPay
-    }));
+    }).map(r => {
+      // 주민번호 뒷자리 필터링: 앞 6자리만 추출하여 birth로 저장
+      const rawId = (r.rrn || r.birth || '').replace(/[^0-9]/g, '');
+      const safeBirth = rawId.length >= 6 ? rawId.slice(0, 6) : rawId;
+
+      return {
+        school: r.school,
+        category: r.category || '방과후',
+        month: r.month,
+        subject: r.subject,
+        name: r.name.trim(),
+        birth: safeBirth, // 온라인 공개용은 오직 앞 6자리만 저장
+        bankName: r.bankName || '',
+        accountNumber: r.accountNumber || '',
+        material: r.material,
+        lessons: r.lessons,
+        baseRate: r.baseRate || 0,
+        counts: r.counts || {},
+        grossPay: r.grossPay,
+        stdPay: r.stdPay,
+        specialTax: r.specialTax,
+        indAccTax: r.indAccTax,
+        incomeTax: r.incomeTax,
+        localTax: r.localTax,
+        netPay: r.netPay
+      };
+    });
 
     const fileContent = "window.PAYROLL_PUBLIC_DATA = " + JSON.stringify(exportList, null, 2) + ";";
     const blob = new Blob([fileContent], { type: "application/javascript;charset=utf-8;" });
@@ -907,15 +1000,10 @@
 
     alert(
       "✅ [data.js] 파일이 다운로드되었습니다!\n\n" +
-      "이 파일을 GitHub 저장소에 다시 올려주시면(덮어쓰기),\n" +
-      "온라인 명세서에 최신 데이터가 반영됩니다."
+      "강사님 조회용 파일이므로 주민번호 뒷자리는 자동으로 안전하게 제외되고\n" +
+      "생년월일(앞 6자리)만 저장되었습니다.\n\n" +
+      "GitHub 저장소에 덮어쓰기 업로드해 주세요."
     );
-  }
-
-  function toggleColumns() {
-    const chk = document.getElementById('chkOnlyNetPay').checked;
-    const detailCols = document.querySelectorAll('.detail-col');
-    detailCols.forEach(col => { col.style.display = chk ? 'none' : ''; });
   }
 
   function deleteItem(id) {
@@ -926,36 +1014,6 @@
     renderTable();
   }
 
-  function printPayslip(id) {
-    const item = getRecords().find(r => r.id === id);
-    if (!item) return;
-
-    const printArea = document.getElementById('printArea');
-    printArea.style.display = 'block';
-    printArea.innerHTML = `
-      <div style="border: 2px solid #333; padding: 25px; max-width: 600px; margin: 20px auto; font-family: 'Malgun Gothic';">
-        <h2 style="text-align: center; margin-bottom: 25px;">[${item.category || '방과후'}] 급여 지급명세서</h2>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-          <tr><th>근무처</th><td>${item.school}</td><th>정산월</th><td>${item.month}</td></tr>
-          <tr><th>성명</th><td>${item.name}</td><th>생년월일</th><td>${item.birth}</td></tr>
-          <tr><th>구분 / 과목</th><td colspan="3">[${item.category || '방과후'}] ${item.subject} (차시: ${item.lessons})</td></tr>
-        </table>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-          <tr style="background: #f5f5f5;"><th colspan="2">지급 항목</th><th colspan="2">공제 항목</th></tr>
-          <tr><td>지급계</td><td style="text-align:right;">${item.grossPay.toLocaleString()}원</td><td>소득세(3%)</td><td style="text-align:right;">${item.incomeTax.toLocaleString()}원</td></tr>
-          <tr><td>재료비</td><td style="text-align:right;">${item.material.toLocaleString()}원</td><td>주민세(0.3%)</td><td style="text-align:right;">${item.localTax.toLocaleString()}원</td></tr>
-          <tr><td></td><td></td><td>특고 고용보험</td><td style="text-align:right;">${item.specialTax.toLocaleString()}원</td></tr>
-          <tr><td></td><td></td><td>산재보험료</td><td style="text-align:right;">${item.indAccTax.toLocaleString()}원</td></tr>
-        </table>
-        <div style="background: #eef3fc; padding: 15px; text-align: center; font-size: 16px; font-weight: bold; border: 1px solid #b8cde8;">
-          실 수령액 : ${item.netPay.toLocaleString()} 원
-        </div>
-      </div>
-    `;
-    window.print();
-    printArea.style.display = 'none';
-  }
-
   function exportCSV() {
     const records = getRecords();
     const sorted = [...records].sort((a, b) => {
@@ -964,9 +1022,11 @@
       return (a.name || '').localeCompare(b.name || '', 'ko');
     });
 
-    let csv = '\uFEFF근무처,구분,과목명,성명,재료비,수업차시,지급계,경비율제외,특고료,산재보험료,소득세,주민세,실지급액\n';
+    let csv = '\uFEFF근무처,구분,과목명,성명,주민등록번호,은행명,은행코드,계좌번호,재료비,수업차시,지급계,경비율제외,특고료,산재보험료,소득세,주민세,실지급액\n';
     sorted.forEach(r => {
-      csv += `${r.school},${r.category || '방과후'},${r.subject},${r.name},${r.material},${r.lessons},${r.grossPay},${r.stdPay},${r.specialTax},${r.indAccTax},${r.incomeTax},${r.localTax},${r.netPay}\n`;
+      const rrnStr = (r.rrn || r.birth) ? `\t${r.rrn || r.birth}` : '';
+      const accStr = r.accountNumber ? `\t${r.accountNumber}` : '';
+      csv += `${r.school},${r.category || '방과후'},${r.subject},${r.name},${rrnStr},${r.bankName || ''},${r.bankCode || ''},${accStr},${r.material},${r.lessons},${r.grossPay},${r.stdPay},${r.specialTax},${r.indAccTax},${r.incomeTax},${r.localTax},${r.netPay}\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
