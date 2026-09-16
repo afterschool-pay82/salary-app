@@ -386,7 +386,6 @@
     for (let i = 1; i <= 12; i++) { const el = document.getElementById(`c${i}`); if (el) el.value = ''; }
   }
 
-  // [신규] 입력된 칸들의 차수를 분석하여 수업차시(표시용) 칸에 자동 반영하는 함수
   function updateAutoLessons() {
     const category = getRadioVal('calcCategory');
     if (category !== '방과후') return;
@@ -674,7 +673,6 @@
       grossPay = totalCoursePay + material;
     }
 
-    // 수업차시 표시용이 비어있다면 자동 생성
     if (!displayLessons && category === '방과후') {
       const activeSteps = Object.keys(counts).map(k => k.replace(/[^0-9]/g, '')).sort((a,b) => b-a);
       displayLessons = activeSteps.length > 0 ? activeSteps.join(', ') : '4';
@@ -773,6 +771,7 @@
       `전체 ${filtered.length}명, 총 지급계 ₩${totalSum.toLocaleString()}`;
   }
 
+  // [중요 수정] exportDataJs에서 baseRate 항목을 함께 내보내도록 수정
   function exportDataJs() {
     const records = getRecords();
     if (records.length === 0) return alert('등록된 정산 내역이 없습니다.');
@@ -790,6 +789,7 @@
       birth: (r.birth || '').trim(),
       material: r.material,
       lessons: r.lessons,
+      baseRate: r.baseRate || 0, // <--- baseRate 단가 전달
       counts: r.counts || {},
       grossPay: r.grossPay,
       stdPay: r.stdPay,
