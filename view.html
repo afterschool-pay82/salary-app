@@ -10,7 +10,6 @@
   <meta property="og:site_name" content="(주)밝은생각">
   <meta property="og:title" content="(주)밝은생각 급여명세서 조회">
   <meta property="og:description" content="성명과 생년월일(6자리)을 입력하여 이번 달 명세서를 확인하세요.">
-  <!-- GitHub 내 업로드된 일러스트 직접 연결 -->
   <meta property="og:image" content="https://afterschool-pay82.github.io/salary-app/thumb.jpg">
   <meta property="og:image:width" content="800">
   <meta property="og:image:height" content="800">
@@ -96,9 +95,12 @@
     .info-table th { width: 25%; background: #fffaf0; padding: 10px; text-align: left; color: #777; border: 1px solid #ffe7ba; }
     .info-table td { width: 25%; padding: 10px; border: 1px solid #ffe7ba; font-weight: 600; color: #222; }
 
+    /* 차수별 수강인원 박스 */
     .counts-box { background: #fffaf0; border: 1px solid #ffd591; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; }
     .counts-header { font-weight: bold; color: #d46b08; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-    .counts-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .school-group-title { font-size: 12px; font-weight: 800; color: #d46b08; margin-top: 10px; margin-bottom: 6px; }
+    .school-group-title:first-child { margin-top: 0; }
+    .counts-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
     .count-chip { background: #fff; border: 1px solid #ffc069; padding: 6px 12px; border-radius: 6px; text-align: center; font-size: 12px; }
     .count-chip strong { color: #fa8c16; font-size: 14px; font-weight: bold; }
 
@@ -184,7 +186,7 @@
         <span>■ 차수별 수강인원 현황</span>
         <span id="totalStudentsBadge" style="font-size:12px; color:#d46b08; font-weight:bold;"></span>
       </div>
-      <div class="counts-grid" id="countsGrid"></div>
+      <div id="countsContainer"></div>
     </div>
 
     <div class="money-section-title" id="sectionTitleMoney">■ 정산 및 공제 상세 내역</div>
@@ -295,7 +297,6 @@
 
     const badge = document.getElementById('badgeCategory');
     badge.innerText = isMulti ? `통합 정산 (${list.length}건)` : fullCategoryName;
-    badge.className = 'slip-badge badge-' + rawCat;
 
     document.getElementById('subTitleMonth').innerText = `${d.month || ''} 귀속 정산`;
     document.getElementById('infoName').innerText = d.name || '-';
@@ -307,12 +308,14 @@
 
     if (isMulti) {
       const schoolList = [...new Set(list.map(x => x.school))].join(', ');
-      const subjectList = list.map(x => `[${x.school}] ${x.subject}`).join(', ');
+      // 각 학교별 과목명 및 수업차시를 함께 표출
+      const subjectDetailList = list.map(x => `[${x.school}] ${x.subject} (${x.lessons || '4'}차시)`).join(', ');
+
       document.getElementById('infoSchool').innerText = schoolList;
       rowWithSubject.style.display = '';
       rowWithoutSubject.style.display = 'none';
       document.getElementById('infoCategory').innerText = '통합(복수과목)';
-      document.getElementById('infoSubject').innerText = subjectList;
+      document.getElementById('infoSubject').innerText = subjectDetailList;
       rowLessons.style.display = 'none';
       document.getElementById('sectionTitleMoney').innerText = '■ 전체 통합 정산 및 공제 내역';
     } else {
@@ -330,44 +333,68 @@
         document.getElementById('infoCategory').innerText = fullCategoryName;
         document.getElementById('infoSubject').innerText = d.subject || '-';
         rowLessons.style.display = '';
-        document.getElementById('infoLessons').innerText = (d.lessons || 0) + '차시';
+        document.getElementById('infoLessons').innerText = `${d.lessons || '4'}차시`;
       }
     }
 
+    // -------------------------------------------------------------
+    // [핵심] 차수별 인원 표시 (단일/복수 강좌 모두 지원)
+    // -------------------------------------------------------------
     const boxCounts = document.getElementById('boxCounts');
-    const countsGrid = document.getElementById('countsGrid');
-    countsGrid.innerHTML = '';
+    const countsContainer = document.getElementById('countsContainer');
+    countsContainer.innerHTML = '';
 
-    if (!isMulti && !isFixedStaff && d.counts && Object.keys(d.counts).length > 0) {
-      let totalStudents = 0;
-      let countChips = [];
+    let totalStudentsSum = 0;
+    let hasAnyStudentCount = false;
 
-      const keys = Object.keys(d.counts).sort((a, b) => {
-        const numA = parseInt(a.replace(/[^0-9]/g, ''), 10);
-        const numB = parseInt(b.replace(/[^0-9]/g, ''), 10);
-        return numB - numA;
-      });
+    list.forEach(item => {
+      if (item.counts && Object.keys(item.counts).length > 0) {
+        const keys = Object.keys(item.counts).sort((a, b) => {
+          const numA = parseInt(a.replace(/[^0-9]/g, ''), 10);
+          const numB = parseInt(b.replace(/[^0-9]/g, ''), 10);
+          return numB - numA;
+        });
 
-      keys.forEach(k => {
-        const count = Number(d.counts[k]) || 0;
-        if (count > 0) {
-          totalStudents += count;
-          const num = k.replace(/[^0-9]/g, '');
-          countChips.push(`<div class="count-chip">${num}회 : <strong>${count}명</strong></div>`);
+        let chips = [];
+        let groupTotal = 0;
+
+        keys.forEach(k => {
+          const count = Number(item.counts[k]) || 0;
+          if (count > 0) {
+            groupTotal += count;
+            totalStudentsSum += count;
+            const num = k.replace(/[^0-9]/g, '');
+            chips.push(`<div class="count-chip">${num}회 : <strong>${count}명</strong></div>`);
+          }
+        });
+
+        if (chips.length > 0) {
+          hasAnyStudentCount = true;
+          if (isMulti) {
+            const groupTitle = document.createElement('div');
+            groupTitle.className = 'school-group-title';
+            groupTitle.innerText = `● [${item.school}] ${item.subject} (${item.lessons || '4'}차시 - 계 ${groupTotal}명)`;
+            countsContainer.appendChild(groupTitle);
+          }
+
+          const grid = document.createElement('div');
+          grid.className = 'counts-grid';
+          grid.innerHTML = chips.join('');
+          countsContainer.appendChild(grid);
         }
-      });
-
-      if (countChips.length > 0) {
-        boxCounts.style.display = 'block';
-        countsGrid.innerHTML = countChips.join('');
-        document.getElementById('totalStudentsBadge').innerText = `총 수강인원: ${totalStudents}명`;
-      } else {
-        boxCounts.style.display = 'none';
       }
+    });
+
+    if (hasAnyStudentCount) {
+      boxCounts.style.display = 'block';
+      document.getElementById('totalStudentsBadge').innerText = `총 수강인원: ${totalStudentsSum}명`;
     } else {
       boxCounts.style.display = 'none';
     }
 
+    // -------------------------------------------------------------
+    // 금액 및 공제액 계산
+    // -------------------------------------------------------------
     let grossPay = 0;
     let material = 0;
 
