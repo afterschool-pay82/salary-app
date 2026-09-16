@@ -10,15 +10,14 @@
   <meta property="og:site_name" content="(주)밝은생각">
   <meta property="og:title" content="(주)밝은생각 급여명세서 조회">
   <meta property="og:description" content="성명과 생년월일(6자리)을 입력하여 이번 달 명세서를 확인하세요.">
-  <!-- 따뜻한 주황빛 톤의 초등학교·교육 관련 대표 이미지 -->
-  <meta property="og:image" content="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80">
+  <!-- 업로드한 일러스트 이미지 연결 -->
+  <meta property="og:image" content="https://afterschool-pay82.github.io/salary-app/kakao-thumb.jpg">
   <meta property="og:image:width" content="800">
-  <meta property="og:image:height" content="533">
+  <meta property="og:image:height" content="800">
 
   <style>
     * { box-sizing: border-box; }
     
-    /* 심플하고 모던한 일러스트 배경 (기하학 패턴 & 오렌지빛 그라디언트) */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", helvetica, sans-serif;
       background-color: #fffaf5;
@@ -46,7 +45,6 @@
       border: 1px solid #ffe7ba;
     }
     
-    /* 인증/조회 화면 */
     #authBox { padding: 45px 28px; text-align: center; }
     .company-header { font-size: 15px; font-weight: 800; color: #fa8c16; margin-bottom: 8px; letter-spacing: -0.5px; }
     .lock-icon { font-size: 42px; margin-bottom: 12px; }
@@ -83,7 +81,6 @@
     }
     .btn-auth:hover { background: #d46b08; }
 
-    /* 명세서 본문 */
     #slipBox { display: none; padding: 32px 24px; }
     .slip-header { text-align: center; border-bottom: 2px solid #fa8c16; padding-bottom: 18px; margin-bottom: 20px; position: relative; }
     .btn-back { position: absolute; left: 0; top: 0; background: none; border: 1px solid #ffd591; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; color: #d46b08; font-weight: 600; }
@@ -99,7 +96,6 @@
     .info-table th { width: 25%; background: #fffaf0; padding: 10px; text-align: left; color: #777; border: 1px solid #ffe7ba; }
     .info-table td { width: 25%; padding: 10px; border: 1px solid #ffe7ba; font-weight: 600; color: #222; }
 
-    /* 차수별 수강인원 박스 */
     .counts-box { background: #fffaf0; border: 1px solid #ffd591; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; }
     .counts-header { font-weight: bold; color: #d46b08; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
     .counts-grid { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -113,7 +109,6 @@
     .col-title { text-align: left; color: #555; }
     .col-val { text-align: right; font-weight: 600; font-family: -apple-system, sans-serif; }
 
-    /* 차인지급액 배너 */
     .netpay-banner { background: #fff7e6; border: 1.5px solid #ffa940; border-radius: 10px; padding: 18px 20px; text-align: center; margin-bottom: 24px; }
     .netpay-banner .label { font-size: 13px; color: #d46b08; font-weight: bold; }
     .netpay-banner .amount { font-size: 28px; color: #fa8c16; font-weight: 800; margin-top: 4px; font-family: -apple-system, sans-serif; }
@@ -133,7 +128,6 @@
 <body>
 
 <div class="container">
-  <!-- 본인 인증 및 조회 폼 -->
   <div id="authBox">
     <div class="company-header">(주)밝은생각</div>
     <div class="lock-icon">📋</div>
@@ -153,7 +147,6 @@
     <button class="btn-auth" onclick="verifyUser()">명세서 확인하기</button>
   </div>
 
-  <!-- 급여 명세서 본문 화면 -->
   <div id="slipBox">
     <div class="slip-header">
       <button class="btn-back" onclick="goBack()">◀ 다시 조회</button>
