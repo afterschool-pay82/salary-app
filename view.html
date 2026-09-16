@@ -17,7 +17,7 @@
   <style>
     * { box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", helvetica, sans-serif; background: #f0f2f5; margin: 0; padding: 20px 15px; color: #333; }
-    .container { max-width: 620px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); overflow: hidden; }
+    .container { max-width: 580px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); overflow: hidden; }
     
     /* 인증/조회 화면 */
     #authBox { padding: 40px 24px; text-align: center; }
@@ -40,37 +40,27 @@
     .btn-back { position: absolute; left: 0; top: 0; background: none; border: 1px solid #d9d9d9; padding: 4px 8px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #666; }
     
     .company-title-tag { font-size: 13px; color: #2f54eb; font-weight: 800; margin-bottom: 4px; }
-    .slip-title { font-size: 22px; font-weight: 800; margin: 0; color: #111; }
-    .slip-subtitle { font-size: 13px; color: #888; margin-top: 4px; }
-
-    /* 기본 강사 정보 바 */
-    .instructor-summary-bar { background: #fafafa; border: 1px solid #eee; border-radius: 6px; padding: 10px 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
-    .instructor-summary-bar strong { color: #1f1f1f; font-size: 15px; }
-
-    /* 학교별 활동 내역 카드 */
-    .school-card { background: #fff; border: 1px solid #dbeafe; border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
-    .school-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #bfdbfe; padding-bottom: 8px; }
-    .school-card-name { font-size: 15px; font-weight: 800; color: #1e40af; }
-    
-    .slip-badge { display: inline-block; padding: 3px 8px; border-radius: 10px; font-size: 11px; font-weight: bold; }
+    .slip-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; margin-bottom: 8px; }
     .badge-방과후 { background: #e6f7ff; color: #1890ff; }
     .badge-맞춤형 { background: #fff7e6; color: #d46b08; }
     .badge-코디 { background: #f6ffed; color: #389e0d; }
     .badge-안전관리자 { background: #f9f0ff; color: #722ed1; }
 
-    .school-info-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 8px; }
-    .school-info-table th { width: 22%; background: #f8fafc; padding: 6px 8px; text-align: left; color: #64748b; border: 1px solid #e2e8f0; }
-    .school-info-table td { padding: 6px 8px; border: 1px solid #e2e8f0; font-weight: 600; color: #334155; }
+    .slip-title { font-size: 22px; font-weight: 800; margin: 0; color: #111; }
+    .slip-subtitle { font-size: 13px; color: #888; margin-top: 4px; }
+
+    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 13px; }
+    .info-table th { width: 25%; background: #fafafa; padding: 9px 10px; text-align: left; color: #666; border: 1px solid #eee; }
+    .info-table td { width: 25%; padding: 9px 10px; border: 1px solid #eee; font-weight: 600; color: #222; }
 
     /* 차수별 수강인원 박스 */
-    .counts-box { background: #f0f7ff; border: 1px solid #bae7ff; border-radius: 6px; padding: 8px 12px; margin-top: 8px; font-size: 12px; }
-    .counts-header { font-weight: bold; color: #0050b3; margin-bottom: 6px; display: flex; justify-content: space-between; }
-    .counts-grid { display: flex; flex-wrap: wrap; gap: 6px; }
-    .count-chip { background: #fff; border: 1px solid #91d5ff; padding: 4px 8px; border-radius: 4px; text-align: center; }
-    .count-chip strong { color: #1890ff; font-weight: bold; }
+    .counts-box { background: #f0f7ff; border: 1px solid #bae7ff; border-radius: 6px; padding: 12px 14px; margin-bottom: 20px; font-size: 13px; }
+    .counts-header { font-weight: bold; color: #0050b3; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .counts-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .count-chip { background: #fff; border: 1px solid #91d5ff; padding: 6px 12px; border-radius: 4px; text-align: center; font-size: 12px; }
+    .count-chip strong { color: #1890ff; font-size: 14px; font-weight: bold; }
 
-    /* 통합 정산 표 */
-    .money-section-title { font-size: 15px; font-weight: 800; color: #1f1f1f; margin-top: 24px; margin-bottom: 8px; }
+    .money-section-title { font-size: 14px; font-weight: bold; color: #1f1f1f; margin-bottom: 8px; }
     .calc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
     .calc-table th { background: #f0f2f5; padding: 10px; border: 1px solid #e1e4e8; color: #333; font-weight: bold; text-align: center; }
     .calc-table td { padding: 9px 12px; border: 1px solid #e1e4e8; }
@@ -121,52 +111,80 @@
     <div class="slip-header">
       <button class="btn-back" onclick="goBack()">◀ 다시 조회</button>
       <div class="company-title-tag">(주)밝은생각</div>
+      <span class="slip-badge" id="badgeCategory">방과후프로그램</span>
       <h1 class="slip-title">급여 지급명세서</h1>
       <div class="slip-subtitle" id="subTitleMonth">2026-08 귀속 정산</div>
     </div>
 
-    <!-- 강사 기본 정보 바 -->
-    <div class="instructor-summary-bar">
-      <div>성 명 : <strong id="barName">-</strong></div>
-      <div>출강 학교 : <strong id="barSchoolCount" style="color:#2f54eb;">1개교</strong></div>
+    <table class="info-table">
+      <tr>
+        <th>근무처</th>
+        <td id="infoSchool">-</td>
+        <th>성 명</th>
+        <td id="infoName">-</td>
+      </tr>
+      <tr id="rowWithSubject">
+        <th>구 분</th>
+        <td id="infoCategory">방과후프로그램</td>
+        <th>과목명</th>
+        <td id="infoSubject">-</td>
+      </tr>
+      <tr id="rowWithoutSubject" style="display:none;">
+        <th>구 분</th>
+        <td colspan="3" id="infoCategoryOnly">-</td>
+      </tr>
+      <tr id="rowLessons">
+        <th>수업차시</th>
+        <td colspan="3" id="infoLessons">-</td>
+      </tr>
+    </table>
+
+    <div id="boxCounts" class="counts-box" style="display:none;">
+      <div class="counts-header">
+        <span>■ 차수별 수강인원 현황</span>
+        <span id="totalStudentsBadge" style="font-size:12px; color:#096dd9; font-weight:bold;"></span>
+      </div>
+      <div class="counts-grid" id="countsGrid"></div>
     </div>
 
-    <!-- 학교별 내역 카드들이 동적으로 생성되는 컨테이너 -->
-    <div id="schoolCardsContainer"></div>
-
-    <!-- 전체 합산 정산 및 공제 내역 표 -->
-    <div class="money-section-title">■ 전체 통합 정산 및 공제 내역</div>
+    <div class="money-section-title" id="sectionTitleMoney">■ 정산 및 공제 상세 내역</div>
     <table class="calc-table">
       <thead>
         <tr>
-          <th colspan="2" style="width:50%;">지급 합산 항목</th>
-          <th colspan="2" style="width:50%;">공제 합산 항목</th>
+          <th colspan="2" style="width:50%;">지급 항목</th>
+          <th colspan="2" style="width:50%;">공제 항목</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td class="col-title">총 수수료(기본급)</td>
-          <td class="col-val" id="valSumCoursePay">0원</td>
+          <td class="col-title" id="titleGrossPay">지급계 (수수료)</td>
+          <td class="col-val" id="valGrossPay">0원</td>
           <td class="col-title">사업소득세 (3%)</td>
-          <td class="col-val" id="valSumIncomeTax">0원</td>
+          <td class="col-val" id="valIncomeTax">0원</td>
         </tr>
-        <tr>
-          <td class="col-title">재료비 지원금 합계</td>
-          <td class="col-val" id="valSumMaterial">0원</td>
+        <tr id="rowMaterial">
+          <td class="col-title">재료비 지원금</td>
+          <td class="col-val" id="valMaterial">0원</td>
           <td class="col-title">지방소득세 (0.3%)</td>
-          <td class="col-val" id="valSumLocalTax">0원</td>
+          <td class="col-val" id="valLocalTax">0원</td>
+        </tr>
+        <tr id="rowTaxOnly1" style="display:none;">
+          <td class="col-title"></td>
+          <td class="col-val"></td>
+          <td class="col-title">지방소득세 (0.3%)</td>
+          <td class="col-val" id="valLocalTaxAlt">0원</td>
         </tr>
         <tr>
           <td class="col-title"></td>
           <td class="col-val"></td>
           <td class="col-title">특고 고용보험</td>
-          <td class="col-val" id="valSumSpecialTax">0원</td>
+          <td class="col-val" id="valSpecialTax">0원</td>
         </tr>
         <tr>
           <td class="col-title"></td>
           <td class="col-val"></td>
           <td class="col-title">산재보험료</td>
-          <td class="col-val" id="valSumIndAccTax">0원</td>
+          <td class="col-val" id="valIndAccTax">0원</td>
         </tr>
         <tr style="background:#fafafa; font-weight:bold;">
           <td class="col-title">총 지급액</td>
@@ -178,7 +196,7 @@
     </table>
 
     <div class="netpay-banner">
-      <div class="label">차인지급액 (총 실 수령액)</div>
+      <div class="label">차인지급액 (실 수령액)</div>
       <div class="amount" id="valNetPay">₩0</div>
     </div>
 
@@ -215,146 +233,167 @@
       return alert("GitHub에 [data.js] 파일이 아직 업로드되지 않았거나 로딩 중입니다.\n저장소에 data.js 파일이 올라가 있는지 확인해 주세요.");
     }
 
-    // 이름과 생년월일이 일치하는 모든 레코드 검색 (여러 학교 지원)
+    // 동일 인물이 여러 학교/과목을 맡았을 경우 모두 수집
     const matchedList = db.filter(item => item.name === name && item.birth === birth);
 
     if (matchedList.length === 0) {
       return alert("일치하는 급여 정보가 없습니다.\n성명(" + name + ")과 생년월일을 다시 확인해 주세요.");
     }
 
-    renderSlipMulti(matchedList);
+    renderSlip(matchedList);
     document.getElementById('authBox').style.display = 'none';
     document.getElementById('slipBox').style.display = 'block';
   }
 
-  function renderSlipMulti(list) {
-    const first = list[0];
-    document.getElementById('barName').innerText = first.name || '-';
-    document.getElementById('subTitleMonth').innerText = `${first.month || ''} 귀속 정산`;
-    document.getElementById('barSchoolCount').innerText = `${list.length}개교 (${list.map(x => x.school).join(', ')})`;
+  function renderSlip(list) {
+    const isMulti = list.length > 1;
+    const d = list[0]; // 단일 건 기본 정보
 
-    const container = document.getElementById('schoolCardsContainer');
-    container.innerHTML = '';
+    const rawCat = d.category || '방과후';
+    let fullCategoryName = rawCat;
+    if (rawCat === '방과후') fullCategoryName = '방과후프로그램';
+    else if (rawCat === '맞춤형') fullCategoryName = '맞춤형프로그램';
 
-    let totalGrossPay = 0;
-    let totalMaterial = 0;
-    let totalIncomeTax = 0;
-    let totalLocalTax = 0;
-    let totalSpecialTax = 0;
-    let totalIndAccTax = 0;
-    let totalNetPay = 0;
+    const badge = document.getElementById('badgeCategory');
+    badge.innerText = isMulti ? `통합 정산 (${list.length}건)` : fullCategoryName;
+    badge.className = 'slip-badge badge-' + rawCat;
 
-    // 각 학교별 카드 생성
-    list.forEach((d, idx) => {
-      const rawCat = d.category || '방과후';
-      let fullCat = rawCat;
-      if (rawCat === '방과후') fullCat = '방과후프로그램';
-      else if (rawCat === '맞춤형') fullCat = '맞춤형프로그램';
+    document.getElementById('subTitleMonth').innerText = `${d.month || ''} 귀속 정산`;
+    document.getElementById('infoName').innerText = d.name || '-';
 
-      const isStaff = (rawCat === '코디' || rawCat === '안전관리자' || d.subject === '코디' || d.subject === '안전관리자');
-      const card = document.createElement('div');
-      card.className = 'school-card';
+    const isFixedStaff = (rawCat === '코디' || rawCat === '안전관리자' || d.subject === '코디' || d.subject === '안전관리자');
+    const rowWithSubject = document.getElementById('rowWithSubject');
+    const rowWithoutSubject = document.getElementById('rowWithoutSubject');
+    const rowLessons = document.getElementById('rowLessons');
 
-      // 차수별 수강인원 칩 생성
-      let countsHtml = '';
-      if (!isStaff && d.counts && Object.keys(d.counts).length > 0) {
-        let stuCount = 0;
-        let chips = [];
-        const sortedKeys = Object.keys(d.counts).sort((a, b) => {
-          return parseInt(b.replace(/[^0-9]/g, ''), 10) - parseInt(a.replace(/[^0-9]/g, ''), 10);
-        });
-        sortedKeys.forEach(k => {
-          const cnt = Number(d.counts[k]) || 0;
-          if (cnt > 0) {
-            stuCount += cnt;
-            const n = k.replace(/[^0-9]/g, '');
-            chips.push(`<div class="count-chip">${n}회: <strong>${cnt}명</strong></div>`);
-          }
-        });
-        if (chips.length > 0) {
-          countsHtml = `
-            <div class="counts-box">
-              <div class="counts-header">
-                <span>■ 차수별 수강인원 현황</span>
-                <span>총 ${stuCount}명</span>
-              </div>
-              <div class="counts-grid">${chips.join('')}</div>
-            </div>
-          `;
-        }
+    if (isMulti) {
+      // 2개 이상 과목/학교를 하는 강사
+      const schoolList = [...new Set(list.map(x => x.school))].join(', ');
+      const subjectList = list.map(x => `[${x.school}] ${x.subject}`).join(', ');
+      document.getElementById('infoSchool').innerText = schoolList;
+      rowWithSubject.style.display = '';
+      rowWithoutSubject.style.display = 'none';
+      document.getElementById('infoCategory').innerText = '통합(복수과목)';
+      document.getElementById('infoSubject').innerText = subjectList;
+      rowLessons.style.display = 'none';
+      document.getElementById('sectionTitleMoney').innerText = '■ 전체 통합 정산 및 공제 내역';
+    } else {
+      // 1개 과목 단일 건
+      document.getElementById('infoSchool').innerText = d.school || '-';
+      document.getElementById('sectionTitleMoney').innerText = '■ 정산 및 공제 상세 내역';
+
+      if (isFixedStaff) {
+        rowWithSubject.style.display = 'none';
+        rowWithoutSubject.style.display = '';
+        document.getElementById('infoCategoryOnly').innerText = fullCategoryName;
+        rowLessons.style.display = 'none';
+      } else {
+        rowWithSubject.style.display = '';
+        rowWithoutSubject.style.display = 'none';
+        document.getElementById('infoCategory').innerText = fullCategoryName;
+        document.getElementById('infoSubject').innerText = d.subject || '-';
+        rowLessons.style.display = '';
+        document.getElementById('infoLessons').innerText = (d.lessons || 0) + '차시';
       }
+    }
 
-      // 과목 및 차시 표시 분기
-      const subjectRow = isStaff ? '' : `
-        <tr>
-          <th>과목명</th>
-          <td>${d.subject || '-'}</td>
-          <th>수업차시</th>
-          <td>${d.lessons || 0}차시</td>
-        </tr>
-      `;
+    // 수강인원 칩 박스 (단일 과목일 때만 표시)
+    const boxCounts = document.getElementById('boxCounts');
+    const countsGrid = document.getElementById('countsGrid');
+    countsGrid.innerHTML = '';
 
-      const materialRow = (isStaff || !d.material) ? '' : `
-        <tr>
-          <th>재료비</th>
-          <td colspan="3">${(d.material || 0).toLocaleString()}원</td>
-        </tr>
-      `;
+    if (!isMulti && !isFixedStaff && d.counts && Object.keys(d.counts).length > 0) {
+      let totalStudents = 0;
+      let countChips = [];
 
-      card.innerHTML = `
-        <div class="school-card-top">
-          <div class="school-card-name">🏫 ${d.school}</div>
-          <div>
-            <span class="slip-badge badge-${rawCat}">${fullCat}</span>
-          </div>
-        </div>
-        <table class="school-info-table">
-          <tr>
-            <th>구 분</th>
-            <td ${isStaff ? 'colspan="3"' : ''}>${fullCat}</td>
-            ${isStaff ? '' : subjectRow}
-          </tr>
-          ${materialRow}
-          <tr>
-            <th>학교 지급액</th>
-            <td colspan="3" style="color:#2f54eb; font-weight:bold;">
-              ${(d.grossPay || 0).toLocaleString()}원
-              <span style="font-size:11px; color:#888; font-weight:normal; margin-left:4px;">
-                (수수료 ${(d.grossPay - (d.material || 0)).toLocaleString()}원 ${d.material ? `+ 재료비 ${d.material.toLocaleString()}원` : ''})
-              </span>
-            </td>
-          </tr>
-        </table>
-        ${countsHtml}
-      `;
+      const keys = Object.keys(d.counts).sort((a, b) => {
+        const numA = parseInt(a.replace(/[^0-9]/g, ''), 10);
+        const numB = parseInt(b.replace(/[^0-9]/g, ''), 10);
+        return numB - numA;
+      });
 
-      container.appendChild(card);
+      keys.forEach(k => {
+        const count = Number(d.counts[k]) || 0;
+        if (count > 0) {
+          totalStudents += count;
+          const num = k.replace(/[^0-9]/g, '');
+          countChips.push(`<div class="count-chip">${num}회 : <strong>${count}명</strong></div>`);
+        }
+      });
 
-      // 전체 합산
-      totalGrossPay += (d.grossPay || 0);
-      totalMaterial += (d.material || 0);
-      totalIncomeTax += (d.incomeTax || 0);
-      totalLocalTax += (d.localTax || 0);
-      totalSpecialTax += (d.specialTax || 0);
-      totalIndAccTax += (d.indAccTax || 0);
-      totalNetPay += (d.netPay || 0);
+      if (countChips.length > 0) {
+        boxCounts.style.display = 'block';
+        countsGrid.innerHTML = countChips.join('');
+        document.getElementById('totalStudentsBadge').innerText = `총 수강인원: ${totalStudents}명`;
+      } else {
+        boxCounts.style.display = 'none';
+      }
+    } else {
+      boxCounts.style.display = 'none';
+    }
+
+    // -------------------------------------------------------------
+    // [핵심] 총 지급액 합산 및 최신 공제 공식 적용
+    // -------------------------------------------------------------
+    let grossPay = 0;
+    let material = 0;
+
+    list.forEach(item => {
+      grossPay += (item.grossPay || 0);
+      material += (item.material || 0);
     });
 
-    const sumCoursePay = totalGrossPay - totalMaterial;
-    const totalDeduct = totalIncomeTax + totalLocalTax + totalSpecialTax + totalIndAccTax;
+    // 1. 경비율 19.3% 공제
+    const stdPay = Math.round(grossPay * (1 - 0.193));
 
-    // 통합 정산 테이블 반영
-    document.getElementById('valSumCoursePay').innerText = sumCoursePay.toLocaleString() + '원';
-    document.getElementById('valSumMaterial').innerText = totalMaterial.toLocaleString() + '원';
-    document.getElementById('valTotalGross').innerText = totalGrossPay.toLocaleString() + '원';
+    // 2. 특고료 산정 규칙 (80만 미만: 0원 / 80~133만: 10,640원 / 133만 초과: stdPay * 0.8%)
+    let specialTax = 0;
+    if (stdPay < 800000) {
+      specialTax = 0;
+    } else if (stdPay <= 1330000) {
+      specialTax = 10640;
+    } else {
+      specialTax = Math.floor((stdPay * 0.008) / 10) * 10;
+    }
 
-    document.getElementById('valSumIncomeTax').innerText = totalIncomeTax.toLocaleString() + '원';
-    document.getElementById('valSumLocalTax').innerText = totalLocalTax.toLocaleString() + '원';
-    document.getElementById('valSumSpecialTax').innerText = totalSpecialTax.toLocaleString() + '원';
-    document.getElementById('valSumIndAccTax').innerText = totalIndAccTax.toLocaleString() + '원';
+    // 3. 산재보험료: 경비율 공제금액(stdPay) * 0.33% (10원 단위 절사)
+    const indAccTax = Math.floor((stdPay * 0.0033) / 10) * 10;
+
+    // 4. 소득세(3%) 및 지방소득세(0.3%)
+    const incomeTax = Math.floor((grossPay * 0.03) / 10) * 10;
+    const localTax = Math.floor((incomeTax * 0.1) / 10) * 10;
+
+    // 5. 총 공제액 및 실지급액
+    const totalDeduct = specialTax + indAccTax + incomeTax + localTax;
+    const netPay = grossPay - totalDeduct;
+
+    // 화면 렌더링
+    const rowMaterial = document.getElementById('rowMaterial');
+    const rowTaxOnly1 = document.getElementById('rowTaxOnly1');
+    const titleGrossPay = document.getElementById('titleGrossPay');
+
+    if (isFixedStaff && !isMulti) {
+      rowMaterial.style.display = 'none';
+      rowTaxOnly1.style.display = '';
+      titleGrossPay.innerText = '월 기본급 (정액)';
+    } else {
+      rowMaterial.style.display = '';
+      rowTaxOnly1.style.display = 'none';
+      titleGrossPay.innerText = isMulti ? '총 수수료(기본급)' : '지급계 (수수료)';
+    }
+
+    document.getElementById('valGrossPay').innerText = grossPay.toLocaleString() + '원';
+    document.getElementById('valMaterial').innerText = material.toLocaleString() + '원';
+    document.getElementById('valTotalGross').innerText = grossPay.toLocaleString() + '원';
+
+    document.getElementById('valIncomeTax').innerText = incomeTax.toLocaleString() + '원';
+    document.getElementById('valLocalTax').innerText = localTax.toLocaleString() + '원';
+    document.getElementById('valLocalTaxAlt').innerText = localTax.toLocaleString() + '원';
+    document.getElementById('valSpecialTax').innerText = specialTax.toLocaleString() + '원';
+    document.getElementById('valIndAccTax').innerText = indAccTax.toLocaleString() + '원';
     document.getElementById('valTotalDeduct').innerText = totalDeduct.toLocaleString() + '원';
 
-    document.getElementById('valNetPay').innerText = '₩' + (totalGrossPay - totalDeduct).toLocaleString();
+    document.getElementById('valNetPay').innerText = '₩' + netPay.toLocaleString();
   }
 
   function goBack() {
