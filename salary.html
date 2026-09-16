@@ -19,6 +19,8 @@
     .btn { padding: 7px 14px; font-size: 13px; font-weight: 600; border-radius: 4px; border: 1px solid #d9d9d9; background: #fff; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
     .btn-primary { background: #2f54eb; color: #fff; border-color: #2f54eb; }
     .btn-primary:hover { background: #1d39c4; }
+    .btn-recalc { background: #722ed1; color: #fff; border-color: #722ed1; font-weight: bold; }
+    .btn-recalc:hover { background: #531dab; }
     .btn-publish { background: #fa8c16; color: #fff; border-color: #fa8c16; font-weight: bold; margin-left: 6px; }
     .btn-publish:hover { background: #d46b08; }
     .btn-setting { background: #52c41a; color: #fff; border-color: #52c41a; }
@@ -93,6 +95,7 @@
   <div class="action-bar">
     <select id="schoolFilter" class="school-filter" onchange="renderTable()"></select>
     <button class="btn btn-primary" onclick="openRecordModal()">정산 등록 (방과후/맞춤형/코디/안전)</button>
+    <button class="btn btn-recalc" onclick="recalculateAllData(true)">⚡ 전체 데이터 일괄 재계산</button>
     <button class="btn btn-setting" onclick="openSchoolSettingModal()">학교별 회차 설정</button>
     <button class="btn" onclick="addNewSchoolPrompt()">+ 학교 등록</button>
     <button class="btn" onclick="exportCSV()">지급명세서 CSV 저장</button>
@@ -248,7 +251,7 @@
       </div>
     </div>
 
-    <div row-grid-3>
+    <div class="row-grid-3">
       <div class="input-item"><label>재료비 지원금</label><input type="number" id="material" placeholder="0"></div>
       <div class="input-item"><label id="lessonsLabel">수업차시(표시용)</label><input type="number" id="displayLessons" value="4"></div>
       <div class="input-item"><label>비고</label><input type="text" id="note" placeholder="특이사항"></div>
@@ -286,7 +289,8 @@
     if (!localStorage.getItem(SETTING_KEY)) localStorage.setItem(SETTING_KEY, JSON.stringify(defaultSchoolSettings));
     
     initSchoolDropdowns();
-    renderTable();
+    // 페이지 진입 시 자동으로 최신 계산 공식 일괄 적용
+    recalculateAllData(false);
   };
 
   function getRecords() { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
@@ -528,6 +532,56 @@
     return Math.floor(((baseRate / totalLessons) * lessonStep) / 10) * 10;
   }
 
+  // 최신 세법 및 공제 공식을 적용하여 레코드 1건을 재계산하는 핵심 함수
+  function calculateItemTaxes(grossPay) {
+    const stdPay = Math.round(grossPay * (1 - 0.193));
+
+    let specialTax = 0;
+    if (stdPay < 800000) {
+      specialTax = 0;
+    } else if (stdPay <= 1330000) {
+      specialTax = 10640;
+    } else {
+      specialTax = Math.floor((stdPay * 0.008) / 10) * 10;
+    }
+
+    const indAccTax = Math.floor((stdPay * 0.0033) / 10) * 10;
+    const incomeTax = Math.floor((grossPay * 0.03) / 10) * 10;
+    const localTax = Math.floor((incomeTax * 0.1) / 10) * 10;
+    const netPay = grossPay - (specialTax + indAccTax + incomeTax + localTax);
+
+    return { stdPay, specialTax, indAccTax, incomeTax, localTax, netPay };
+  }
+
+  // [핵심] 모든 강사의 데이터를 최신 공식으로 일괄 자동 재계산하는 함수
+  function recalculateAllData(showAlert) {
+    let records = getRecords();
+    if (records.length === 0) {
+      renderTable();
+      return;
+    }
+
+    records = records.map(item => {
+      const taxes = calculateItemTaxes(item.grossPay || 0);
+      return {
+        ...item,
+        stdPay: taxes.stdPay,
+        specialTax: taxes.specialTax,
+        indAccTax: taxes.indAccTax,
+        incomeTax: taxes.incomeTax,
+        localTax: taxes.localTax,
+        netPay: taxes.netPay
+      };
+    });
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    renderTable();
+
+    if (showAlert) {
+      alert(`총 ${records.length}명의 급여 내역이 최신 기준(경비율 19.3%, 특고료 구간, 산재 0.33%)으로 일괄 재계산되었습니다!`);
+    }
+  }
+
   function saveRecordFromModal() {
     const category = getRadioVal('calcCategory');
     const school = document.getElementById('modalSchool').value;
@@ -588,31 +642,7 @@
       grossPay = totalCoursePay + material;
     }
 
-    // 1. 경비율 공제금액 (19.3% 공제 = 지급액 * 0.807)
-    const stdPay = Math.round(grossPay * (1 - 0.193));
-
-    // 2. 특고료 산정 규칙
-    // - 80만 원 미만: 0원 (면제)
-    // - 80만 원 ~ 133만 원: 10,640원 (정액)
-    // - 133만 원 초과: 경비율 적용 후 금액(stdPay) * 0.8% (10원 단위 절사)
-    let specialTax = 0;
-    if (stdPay < 800000) {
-      specialTax = 0;
-    } else if (stdPay <= 1330000) {
-      specialTax = 10640;
-    } else {
-      specialTax = Math.floor((stdPay * 0.008) / 10) * 10;
-    }
-
-    // 3. [핵심 수정] 산재보험료: 경비율 공제금액(stdPay)의 0.33% (10원 단위 절사)
-    const indAccTax = Math.floor((stdPay * 0.0033) / 10) * 10;
-
-    // 4. 소득세(3%) 및 지방소득세(0.3%)
-    const incomeTax = Math.floor((grossPay * 0.03) / 10) * 10;
-    const localTax = Math.floor((incomeTax * 0.1) / 10) * 10;
-
-    // 5. 차인지급액 (실지급액)
-    const netPay = grossPay - (specialTax + indAccTax + incomeTax + localTax);
+    const taxes = calculateItemTaxes(grossPay);
 
     const records = getRecords();
 
@@ -623,7 +653,13 @@
           ...records[idx],
           school, category, month, subject, name, birth, material, lessons: displayLessons,
           baseRate: rateOrSalary, counts, note,
-          grossPay, stdPay, specialTax, indAccTax, incomeTax, localTax, netPay
+          grossPay,
+          stdPay: taxes.stdPay,
+          specialTax: taxes.specialTax,
+          indAccTax: taxes.indAccTax,
+          incomeTax: taxes.incomeTax,
+          localTax: taxes.localTax,
+          netPay: taxes.netPay
         };
       }
       alert(`[${name}] 님의 정보가 수정되었습니다.`);
@@ -632,7 +668,13 @@
         id: Date.now(),
         school, category, month, subject, name, birth, material, lessons: displayLessons,
         baseRate: rateOrSalary, counts, note,
-        grossPay, stdPay, specialTax, indAccTax, incomeTax, localTax, netPay
+        grossPay,
+        stdPay: taxes.stdPay,
+        specialTax: taxes.specialTax,
+        indAccTax: taxes.indAccTax,
+        incomeTax: taxes.incomeTax,
+        localTax: taxes.localTax,
+        netPay: taxes.netPay
       });
       alert(`[${name}] 님이 등록되었습니다.`);
     }
