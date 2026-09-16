@@ -6,7 +6,7 @@
   <style>
     * { box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic", "맑은 고딕", helvetica, sans-serif; background: #eef1f5; margin: 0; padding: 20px; color: #333; }
-    .main-wrapper { max-width: 1720px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+    .main-wrapper { max-width: 1760px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
     
     .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .title-area { display: flex; align-items: center; gap: 12px; }
@@ -35,21 +35,25 @@
     .btn-setting { background: #52c41a; color: #fff; border-color: #52c41a; }
     .btn-setting:hover { background: #389e0d; }
     
+    /* 상단 요약 바 */
     .summary-text { 
-      font-size: 14px; 
+      font-size: 13.5px; 
       color: #555; 
       margin-bottom: 12px; 
       font-weight: 600; 
       background: #fafafa;
       border: 1px solid #f0f0f0;
-      padding: 8px 14px;
+      padding: 9px 16px;
       border-radius: 6px;
-      display: inline-flex;
+      display: flex;
       align-items: center;
-      gap: 8px;
+      flex-wrap: wrap;
+      gap: 10px;
     }
-    .summary-text strong.total-gross { color: #1f1f1f; }
-    .summary-text strong.total-net { color: #1890ff; font-weight: 800; }
+    .summary-text strong.total-gross { color: #1f1f1f; font-weight: 800; }
+    .summary-text strong.total-tax { color: #cf1322; }
+    .summary-text strong.total-net { color: #1890ff; font-weight: 800; font-size: 14.5px; }
+    .divider { color: #e8e8e8; }
     
     table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
     th { background: #fafafa; color: #262626; font-weight: 600; border: 1px solid #e8e8e8; padding: 9px 4px; }
@@ -127,12 +131,21 @@
     <button class="btn btn-publish" onclick="exportDataJs()">📢 명세서 데이터 발행 (data.js 저장)</button>
   </div>
 
+  <!-- 합계 요약 바 (지급계, 소득세, 주민세, 특고료, 산재, 실지급액) -->
   <div class="summary-text" id="summaryCounter">
-    <span>전체 0명</span>
-    <span>|</span>
+    <span>전체 0건</span>
+    <span class="divider">|</span>
     <span>총 지급계 <strong class="total-gross">₩0</strong></span>
-    <span>|</span>
-    <span>총 실지급액 <strong class="total-net">₩0</strong></span>
+    <span class="divider">|</span>
+    <span>소득세계 <strong class="total-tax" id="sumIncomeTax">₩0</strong></span>
+    <span class="divider">|</span>
+    <span>주민세계 <strong class="total-tax" id="sumLocalTax">₩0</strong></span>
+    <span class="divider">|</span>
+    <span>특고료계 <strong class="total-tax" id="sumSpecialTax">₩0</strong></span>
+    <span class="divider">|</span>
+    <span>산재보험계 <strong class="total-tax" id="sumIndAccTax">₩0</strong></span>
+    <span class="divider">|</span>
+    <span>총 실지급액 <strong class="total-net" id="sumNetPay">₩0</strong></span>
   </div>
 
   <table>
@@ -223,7 +236,7 @@
       </div>
       <div class="input-item">
         <label style="font-weight:bold; color:#1d39c4;">주민등록번호</label>
-        <input type="text" id="rrn" placeholder="13자리 (예: 890113-*******)" maxlength="14" oninput="formatRRN(this)">
+        <input type="text" id="rrn" placeholder="13자리 (예: 000000-0000000)" maxlength="14" oninput="formatRRN(this)">
       </div>
     </div>
 
@@ -852,10 +865,18 @@
     tbody.innerHTML = '';
 
     let totalGrossSum = 0;
+    let totalIncomeTax = 0;
+    let totalLocalTax = 0;
+    let totalSpecialTax = 0;
+    let totalIndAccTax = 0;
     let totalNetSum = 0;
 
     filtered.forEach(item => {
       totalGrossSum += (item.grossPay || 0);
+      totalIncomeTax += (item.incomeTax || 0);
+      totalLocalTax += (item.localTax || 0);
+      totalSpecialTax += (item.specialTax || 0);
+      totalIndAccTax += (item.indAccTax || 0);
       totalNetSum += (item.netPay || 0);
 
       const cat = item.category || '방과후';
@@ -895,12 +916,20 @@
       tbody.appendChild(row);
     });
 
-    const searchNotice = currentSearchQuery ? ` [검색어: "${currentSearchQuery}"]` : '';
+    const searchNotice = currentSearchQuery ? ` [검색: "${currentSearchQuery}"]` : '';
     document.getElementById('summaryCounter').innerHTML = `
       <span>전체 ${filtered.length}건${searchNotice}</span>
-      <span style="color:#d9d9d9;">|</span>
+      <span class="divider">|</span>
       <span>총 지급계 <strong class="total-gross">₩${totalGrossSum.toLocaleString()}</strong></span>
-      <span style="color:#d9d9d9;">|</span>
+      <span class="divider">|</span>
+      <span>소득세계 <strong class="total-tax">₩${totalIncomeTax.toLocaleString()}</strong></span>
+      <span class="divider">|</span>
+      <span>주민세계 <strong class="total-tax">₩${totalLocalTax.toLocaleString()}</strong></span>
+      <span class="divider">|</span>
+      <span>특고료계 <strong class="total-tax">₩${totalSpecialTax.toLocaleString()}</strong></span>
+      <span class="divider">|</span>
+      <span>산재보험계 <strong class="total-tax">₩${totalIndAccTax.toLocaleString()}</strong></span>
+      <span class="divider">|</span>
       <span>총 실지급액 <strong class="total-net">₩${totalNetSum.toLocaleString()}</strong></span>
     `;
   }
