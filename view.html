@@ -180,7 +180,7 @@
 
     <div class="auth-input-wrap">
       <label for="birthInput">생년월일 (주민번호 앞 6자리)</label>
-      <input type="password" id="birthInput" class="auth-input" placeholder="예: 890113" maxlength="6" inputmode="numeric">
+      <input type="password" id="birthInput" class="auth-input" placeholder="예: 123456" maxlength="6" inputmode="numeric">
     </div>
 
     <button class="btn-auth" onclick="verifyUser()">명세서 확인하기</button>
@@ -402,7 +402,7 @@
     }
 
     // -------------------------------------------------------------
-    // 차수별 수강인원 2열(한 줄에 2개씩) 카드 배치 로직
+    // 차수별 수강인원 2열 카드 배치
     // -------------------------------------------------------------
     const boxCounts = document.getElementById('boxCounts');
     const countsContainer = document.getElementById('countsContainer');
@@ -425,7 +425,6 @@
           hasAnyStudentCount = true;
           const displaySubj = normalizeSubjectName(item.subject);
 
-          // 한 학교를 담는 독립 카드 생성 (2열 그리드 배치)
           const card = document.createElement('div');
           card.className = 'school-card';
 
