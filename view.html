@@ -393,15 +393,15 @@
           const grid = document.createElement('div');
           grid.className = 'counts-grid';
 
-          // 완강 기준 차수 파악
+          // 총 수수료 (재료비 제외)
+          const coursePayOnly = (item.grossPay || 0) - (item.material || 0);
+
+          // 완강 기준 차수 결정
           let totalMaxLessons = 4;
           if (validKeys.some(k => k.startsWith('c'))) totalMaxLessons = 12;
           else if (validKeys.some(k => k.startsWith('e'))) totalMaxLessons = 8;
 
-          // 총 수수료 (재료비 제외)
-          const coursePayOnly = (item.grossPay || 0) - (item.material || 0);
-
-          // baseRate가 비어있을 경우 역산 처리
+          // 1. 단가 확인 (baseRate가 있으면 최우선 사용, 없으면 역산하되 10원 단위 반올림으로 정확한 단가 복원)
           let effectiveBaseRate = Number(item.baseRate) || 0;
           if (!effectiveBaseRate && coursePayOnly > 0) {
             let totalWeightedSteps = 0;
@@ -411,7 +411,7 @@
               totalWeightedSteps += (n / totalMaxLessons) * c;
             });
             if (totalWeightedSteps > 0) {
-              effectiveBaseRate = Math.round(coursePayOnly / totalWeightedSteps);
+              effectiveBaseRate = Math.round((coursePayOnly / totalWeightedSteps) / 10) * 10;
             }
           }
 
@@ -420,13 +420,13 @@
             const num = parseInt(k.replace(/[^0-9]/g, ''), 10);
             totalStudentsSum += count;
 
+            // 대장과 100% 동일한 회차별 절사 공식: FLOOR((baseRate / totalMaxLessons * num), 10)
             let stepRate = effectiveBaseRate;
             if (totalMaxLessons !== num && effectiveBaseRate > 0) {
               stepRate = Math.floor(((effectiveBaseRate / totalMaxLessons) * num) / 10) * 10;
             }
 
             let stepPay = stepRate * count;
-            // 만약 그래도 0원이면 단일 건 기준 전체 금액 적용
             if ((!stepPay || stepPay === 0) && validKeys.length === 1) {
               stepPay = coursePayOnly;
             }
