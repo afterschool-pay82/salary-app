@@ -248,7 +248,7 @@
       </div>
     </div>
 
-    <div class="row-grid-3">
+    <div row-grid-3>
       <div class="input-item"><label>재료비 지원금</label><input type="number" id="material" placeholder="0"></div>
       <div class="input-item"><label id="lessonsLabel">수업차시(표시용)</label><input type="number" id="displayLessons" value="4"></div>
       <div class="input-item"><label>비고</label><input type="text" id="note" placeholder="특이사항"></div>
@@ -588,14 +588,13 @@
       grossPay = totalCoursePay + material;
     }
 
-    // [경비율 19.3% 공제 적용]
-    // 경비율 공제 금액(기준보수) = 지급액 - (지급액 * 19.3%) = 지급액 * 0.807
+    // 1. 경비율 공제금액 (19.3% 공제 = 지급액 * 0.807)
     const stdPay = Math.round(grossPay * (1 - 0.193));
 
-    // [특고 고용보험료 산정 규칙]
-    // 1. 80만 원 미만: 0원 (면제)
-    // 2. 80만 원 ~ 133만 원: 10,640원 (정액)
-    // 3. 133만 원 초과: 경비율 적용 후 금액(stdPay) * 0.8% (10원 단위 절사)
+    // 2. 특고료 산정 규칙
+    // - 80만 원 미만: 0원 (면제)
+    // - 80만 원 ~ 133만 원: 10,640원 (정액)
+    // - 133만 원 초과: 경비율 적용 후 금액(stdPay) * 0.8% (10원 단위 절사)
     let specialTax = 0;
     if (stdPay < 800000) {
       specialTax = 0;
@@ -605,9 +604,14 @@
       specialTax = Math.floor((stdPay * 0.008) / 10) * 10;
     }
 
-    const indAccTax = Math.floor((grossPay * 0.00265) / 10) * 10;
+    // 3. [핵심 수정] 산재보험료: 경비율 공제금액(stdPay)의 0.33% (10원 단위 절사)
+    const indAccTax = Math.floor((stdPay * 0.0033) / 10) * 10;
+
+    // 4. 소득세(3%) 및 지방소득세(0.3%)
     const incomeTax = Math.floor((grossPay * 0.03) / 10) * 10;
     const localTax = Math.floor((incomeTax * 0.1) / 10) * 10;
+
+    // 5. 차인지급액 (실지급액)
     const netPay = grossPay - (specialTax + indAccTax + incomeTax + localTax);
 
     const records = getRecords();
