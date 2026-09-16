@@ -98,11 +98,22 @@
     /* 차수별 수강인원 박스 */
     .counts-box { background: #fffaf0; border: 1px solid #ffd591; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; }
     .counts-header { font-weight: bold; color: #d46b08; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-    .school-group-title { font-size: 12.5px; font-weight: 800; color: #d46b08; margin-top: 12px; margin-bottom: 6px; }
+    .school-group-title { font-size: 13px; font-weight: 800; color: #d46b08; margin-top: 12px; margin-bottom: 8px; }
     .school-group-title:first-child { margin-top: 0; }
     .counts-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-    .count-chip { background: #fff; border: 1px solid #ffc069; padding: 6px 12px; border-radius: 6px; text-align: center; font-size: 12px; }
-    .count-chip strong { color: #fa8c16; font-size: 14px; font-weight: bold; }
+    .count-chip { 
+      background: #fff; 
+      border: 1px solid #ffc069; 
+      padding: 7px 12px; 
+      border-radius: 6px; 
+      font-size: 12.5px; 
+      color: #333;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .count-chip strong { color: #fa8c16; font-size: 13.5px; }
+    .chip-pay { color: #8c8c8c; font-size: 11.5px; font-weight: 600; }
 
     .money-section-title { font-size: 14px; font-weight: bold; color: #1f1f1f; margin-bottom: 10px; }
     .calc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
@@ -263,7 +274,6 @@
     document.getElementById('birthInput').addEventListener('keyup', e => { if (e.key === 'Enter') verifyUser(); });
   };
 
-  // 요리 관련 과목명을 '요리'로 정규화하는 헬퍼 함수
   function normalizeSubjectName(subj) {
     if (!subj) return '';
     const trimmed = subj.trim();
@@ -314,16 +324,17 @@
     const rowWithoutSubject = document.getElementById('rowWithoutSubject');
     const rowLessons = document.getElementById('rowLessons');
 
+    // 과목명 표시 처리: 요리 관련은 그냥 깔끔하게 '요리'로 단일 표기
+    const allNormalized = [...new Set(list.map(x => normalizeSubjectName(x.subject)))];
+    const cleanSubjectDisplay = allNormalized.length === 1 ? allNormalized[0] : allNormalized.join(', ');
+
     if (isMulti) {
       const schoolList = [...new Set(list.map(x => x.school))].join(', ');
-      // 과목명을 요리로 통일하여 상단 표출
-      const subjectDetailList = list.map(x => `[${x.school}] ${normalizeSubjectName(x.subject)} (${x.lessons || '4'}차시)`).join(', ');
-
       document.getElementById('infoSchool').innerText = schoolList;
       rowWithSubject.style.display = '';
       rowWithoutSubject.style.display = 'none';
       document.getElementById('infoCategory').innerText = '통합(복수과목)';
-      document.getElementById('infoSubject').innerText = subjectDetailList;
+      document.getElementById('infoSubject').innerText = cleanSubjectDisplay;
       rowLessons.style.display = 'none';
       document.getElementById('sectionTitleMoney').innerText = '■ 전체 통합 정산 및 공제 내역';
     } else {
@@ -339,14 +350,14 @@
         rowWithSubject.style.display = '';
         rowWithoutSubject.style.display = 'none';
         document.getElementById('infoCategory').innerText = fullCategoryName;
-        document.getElementById('infoSubject').innerText = normalizeSubjectName(d.subject);
+        document.getElementById('infoSubject').innerText = cleanSubjectDisplay;
         rowLessons.style.display = '';
         document.getElementById('infoLessons').innerText = `${d.lessons || '4'}차시`;
       }
     }
 
     // -------------------------------------------------------------
-    // 차수별 인원 및 학교별 지급액 표출
+    // 차수별 수강인원 및 단추(칩) 안 지급계 표기
     // -------------------------------------------------------------
     const boxCounts = document.getElementById('boxCounts');
     const countsContainer = document.getElementById('countsContainer');
@@ -366,29 +377,42 @@
         let chips = [];
         let groupTotal = 0;
 
+        // 해당 학교 강좌의 지급액
+        const schoolPay = item.grossPay || 0;
+
+        // 전체 카운트 합산
+        let totalCountInItem = 0;
+        keys.forEach(k => { totalCountInItem += (Number(item.counts[k]) || 0); });
+
         keys.forEach(k => {
           const count = Number(item.counts[k]) || 0;
           if (count > 0) {
             groupTotal += count;
             totalStudentsSum += count;
             const num = k.replace(/[^0-9]/g, '');
-            chips.push(`<div class="count-chip">${num}회 : <strong>${count}명</strong></div>`);
+
+            // 단일 차수일 경우 해당 차수가 전체 금액, 다중 차수일 경우 비율 또는 전체 표기
+            const stepPayStr = (keys.length === 1 || count === totalCountInItem) 
+              ? schoolPay.toLocaleString() + '원' 
+              : schoolPay.toLocaleString() + '원';
+
+            chips.push(`
+              <div class="count-chip">
+                <span>${num}회 : <strong>${count}명</strong></span>
+                <span class="chip-pay">(${stepPayStr})</span>
+              </div>
+            `);
           }
         });
 
         if (chips.length > 0) {
           hasAnyStudentCount = true;
           const displaySubj = normalizeSubjectName(item.subject);
-          const schoolPayStr = (item.grossPay || 0).toLocaleString();
 
+          // 제목에는 괄호 안의 긴 설명을 없애고 깔끔하게 표기
           const groupTitle = document.createElement('div');
           groupTitle.className = 'school-group-title';
-          if (isMulti) {
-            // [학교] 요리 (4차시 - 계 34명 / 680,000원)
-            groupTitle.innerText = `● [${item.school}] ${displaySubj} (${item.lessons || '4'}차시 - 계 ${groupTotal}명 / ${schoolPayStr}원)`;
-          } else {
-            groupTitle.innerText = `● [${item.school}] ${displaySubj} (${item.lessons || '4'}차시 - 계 ${groupTotal}명 / ${schoolPayStr}원)`;
-          }
+          groupTitle.innerText = `● [${item.school}] ${displaySubj}`;
           countsContainer.appendChild(groupTitle);
 
           const grid = document.createElement('div');
