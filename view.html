@@ -10,7 +10,8 @@
   <meta property="og:site_name" content="(주)밝은생각">
   <meta property="og:title" content="(주)밝은생각 급여명세서 조회">
   <meta property="og:description" content="성명과 생년월일(6자리)을 입력하여 이번 달 명세서를 확인하세요.">
-  <meta property="og:image" content="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=800&q=80">
+  <!-- 따뜻한 주황빛 톤의 초등학교·교육 관련 대표 이미지 -->
+  <meta property="og:image" content="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=800&q=80">
   <meta property="og:image:width" content="800">
   <meta property="og:image:height" content="533">
 
@@ -301,6 +302,7 @@
 
     const badge = document.getElementById('badgeCategory');
     badge.innerText = isMulti ? `통합 정산 (${list.length}건)` : fullCategoryName;
+    badge.className = 'slip-badge badge-' + rawCat;
 
     document.getElementById('subTitleMonth').innerText = `${d.month || ''} 귀속 정산`;
     document.getElementById('infoName').innerText = d.name || '-';
