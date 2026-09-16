@@ -98,7 +98,7 @@
     /* 차수별 수강인원 박스 */
     .counts-box { background: #fffaf0; border: 1px solid #ffd591; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; }
     .counts-header { font-weight: bold; color: #d46b08; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
-    .school-group-title { font-size: 12px; font-weight: 800; color: #d46b08; margin-top: 10px; margin-bottom: 6px; }
+    .school-group-title { font-size: 12.5px; font-weight: 800; color: #d46b08; margin-top: 12px; margin-bottom: 6px; }
     .school-group-title:first-child { margin-top: 0; }
     .counts-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
     .count-chip { background: #fff; border: 1px solid #ffc069; padding: 6px 12px; border-radius: 6px; text-align: center; font-size: 12px; }
@@ -263,6 +263,14 @@
     document.getElementById('birthInput').addEventListener('keyup', e => { if (e.key === 'Enter') verifyUser(); });
   };
 
+  // 요리 관련 과목명을 '요리'로 정규화하는 헬퍼 함수
+  function normalizeSubjectName(subj) {
+    if (!subj) return '';
+    const trimmed = subj.trim();
+    if (trimmed.includes('요리')) return '요리';
+    return trimmed;
+  }
+
   function verifyUser() {
     const name = document.getElementById('nameInput').value.trim();
     const birth = document.getElementById('birthInput').value.trim();
@@ -308,8 +316,8 @@
 
     if (isMulti) {
       const schoolList = [...new Set(list.map(x => x.school))].join(', ');
-      // 각 학교별 과목명 및 수업차시를 함께 표출
-      const subjectDetailList = list.map(x => `[${x.school}] ${x.subject} (${x.lessons || '4'}차시)`).join(', ');
+      // 과목명을 요리로 통일하여 상단 표출
+      const subjectDetailList = list.map(x => `[${x.school}] ${normalizeSubjectName(x.subject)} (${x.lessons || '4'}차시)`).join(', ');
 
       document.getElementById('infoSchool').innerText = schoolList;
       rowWithSubject.style.display = '';
@@ -331,14 +339,14 @@
         rowWithSubject.style.display = '';
         rowWithoutSubject.style.display = 'none';
         document.getElementById('infoCategory').innerText = fullCategoryName;
-        document.getElementById('infoSubject').innerText = d.subject || '-';
+        document.getElementById('infoSubject').innerText = normalizeSubjectName(d.subject);
         rowLessons.style.display = '';
         document.getElementById('infoLessons').innerText = `${d.lessons || '4'}차시`;
       }
     }
 
     // -------------------------------------------------------------
-    // [핵심] 차수별 인원 표시 (단일/복수 강좌 모두 지원)
+    // 차수별 인원 및 학교별 지급액 표출
     // -------------------------------------------------------------
     const boxCounts = document.getElementById('boxCounts');
     const countsContainer = document.getElementById('countsContainer');
@@ -370,12 +378,18 @@
 
         if (chips.length > 0) {
           hasAnyStudentCount = true;
+          const displaySubj = normalizeSubjectName(item.subject);
+          const schoolPayStr = (item.grossPay || 0).toLocaleString();
+
+          const groupTitle = document.createElement('div');
+          groupTitle.className = 'school-group-title';
           if (isMulti) {
-            const groupTitle = document.createElement('div');
-            groupTitle.className = 'school-group-title';
-            groupTitle.innerText = `● [${item.school}] ${item.subject} (${item.lessons || '4'}차시 - 계 ${groupTotal}명)`;
-            countsContainer.appendChild(groupTitle);
+            // [학교] 요리 (4차시 - 계 34명 / 680,000원)
+            groupTitle.innerText = `● [${item.school}] ${displaySubj} (${item.lessons || '4'}차시 - 계 ${groupTotal}명 / ${schoolPayStr}원)`;
+          } else {
+            groupTitle.innerText = `● [${item.school}] ${displaySubj} (${item.lessons || '4'}차시 - 계 ${groupTotal}명 / ${schoolPayStr}원)`;
           }
+          countsContainer.appendChild(groupTitle);
 
           const grid = document.createElement('div');
           grid.className = 'counts-grid';
