@@ -13,7 +13,7 @@
     .title-area h1 { margin: 0; font-size: 22px; font-weight: 800; color: #1f1f1f; }
     .month-select { font-size: 14px; padding: 5px 8px; border: 1px solid #d9d9d9; border-radius: 4px; font-weight: 600; outline: none; }
     
-    /* 2단 분리 액션 바 */
+    /* 2단 액션 바 */
     .action-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
     .action-bar-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
@@ -70,6 +70,7 @@
     .cat-맞춤형 { background: #fff7e6; color: #d46b08; border: 1px solid #ffd591; }
     .cat-코디 { background: #f6ffed; color: #389e0d; border: 1px solid #b7eb8f; }
     .cat-안전관리자 { background: #f9f0ff; color: #722ed1; border: 1px solid #d3adf7; }
+    .cat-돌봄전담사 { background: #fff0f6; color: #eb2f96; border: 1px solid #ffadd2; }
 
     .btn-del { border: 1px solid #ffa39e; background: #fff1f0; color: #f5222d; padding: 4px 9px; font-size: 11px; border-radius: 3px; cursor: pointer; font-weight: bold; }
 
@@ -79,7 +80,7 @@
     .modal-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f0f0f0; padding-bottom: 12px; }
     .close-icon { font-size: 20px; cursor: pointer; border: none; background: none; color: #999; }
     
-    .type-selector-bar { display: flex; align-items: center; gap: 16px; background: #f0f5ff; padding: 10px 14px; border-radius: 6px; border: 1px solid #adc6ff; margin-bottom: 14px; font-size: 13px; font-weight: bold; }
+    .type-selector-bar { display: flex; align-items: center; gap: 16px; background: #f0f5ff; padding: 10px 14px; border-radius: 6px; border: 1px solid #adc6ff; margin-bottom: 14px; font-size: 13px; font-weight: bold; flex-wrap: wrap; }
     .type-selector-bar label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: #1d39c4; }
 
     .row-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 20px; row-gap: 12px; margin-bottom: 14px; }
@@ -120,7 +121,7 @@
   <div class="action-container">
     <!-- 1열: 색상 있는 기능 버튼 -->
     <div class="action-bar-row">
-      <button class="btn btn-primary" onclick="openRecordModal()">정산 등록 (방과후/맞춤형/코디/안전)</button>
+      <button class="btn btn-primary" onclick="openRecordModal()">정산 등록 (방과후/맞춤형/코디/안전/돌봄)</button>
       <button class="btn btn-recalc" onclick="recalculateAllData(true)">⚡ 전체 데이터 일괄 재계산</button>
       <button class="btn btn-tax" onclick="exportTaxCombinedCSV()">📊 세무신고용 강사별 합산 CSV</button>
       <button class="btn btn-setting" onclick="openSchoolSettingModal()">학교별 회차 설정</button>
@@ -224,12 +225,14 @@
       <button class="close-icon" onclick="closeRecordModal()">&times;</button>
     </div>
 
+    <!-- 돌봄전담사 추가된 구분 바 -->
     <div class="type-selector-bar">
       <span>구분 선택:</span>
       <label><input type="radio" name="calcCategory" value="방과후" checked onchange="onChangeCategory()"> 방과후프로그램</label>
       <label><input type="radio" name="calcCategory" value="맞춤형" onchange="onChangeCategory()"> 맞춤형프로그램</label>
       <label><input type="radio" name="calcCategory" value="코디" onchange="onChangeCategory()"> 코디</label>
       <label><input type="radio" name="calcCategory" value="안전관리자" onchange="onChangeCategory()"> 안전관리자</label>
+      <label><input type="radio" name="calcCategory" value="돌봄전담사" onchange="onChangeCategory()"> 돌봄전담사</label>
     </div>
 
     <div class="row-grid-3">
@@ -637,14 +640,19 @@
       return;
     }
 
-    if (category === '코디' || category === '안전관리자') {
+    // 코디 / 안전관리자 / 돌봄전담사 정액 모드
+    if (category === '코디' || category === '안전관리자' || category === '돌봄전담사') {
       rateLabel.innerText = '월 기본급 (정액)';
       subjectLabel.innerText = "역할/업무명";
       nameLabel.innerText = "성명";
       badge.innerText = `● ${category} 모드: 월 기본급(정액)으로 정산됩니다.`;
-      badge.style.color = category === '코디' ? '#389e0d' : '#722ed1';
+      
+      if (category === '코디') badge.style.color = '#389e0d';
+      else if (category === '안전관리자') badge.style.color = '#722ed1';
+      else badge.style.color = '#eb2f96';
+
       if (!currentEditId) {
-        displayLessons.value = (category === '코디') ? '20' : '15';
+        displayLessons.value = (category === '코디') ? '20' : (category === '돌봄전담사' ? '20' : '15');
         if (!document.getElementById('subject').value || document.getElementById('subject').value === '축구교실') {
           document.getElementById('subject').value = category;
         }
@@ -771,7 +779,7 @@
     if (category === '맞춤형') {
       const numericLessons = Number(displayLessons) || 0;
       grossPay = Math.round(rateOrSalary * numericLessons) + material;
-    } else if (category === '코디' || category === '안전관리자') {
+    } else if (category === '코디' || category === '안전관리자' || category === '돌봄전담사') {
       grossPay = rateOrSalary + material;
     } else if (is8) {
       let totalCoursePay = 0;
