@@ -167,7 +167,7 @@
         <th rowspan="2">은행</th>
         <th rowspan="2">계좌번호</th>
         <th rowspan="2">재료비</th>
-        <th rowspan="2">수업차시</th>
+        <th rowspan="2">수업차시(일수)</th>
         <th rowspan="2">지급계</th>
         <th rowspan="2">경비율제외<br>(19.3% 공제)</th>
         <th rowspan="2">특고료</th>
@@ -225,7 +225,7 @@
       <button class="close-icon" onclick="closeRecordModal()">&times;</button>
     </div>
 
-    <!-- 돌봄전담사 추가된 구분 바 -->
+    <!-- 구분 선택 -->
     <div class="type-selector-bar">
       <span>구분 선택:</span>
       <label><input type="radio" name="calcCategory" value="방과후" checked onchange="onChangeCategory()"> 방과후프로그램</label>
@@ -379,12 +379,21 @@
 
   const defaultSchoolSettings = {
     '창영초': { '피아노': '12', '피아노2': '12', '영어': '8', '영어2': '12', '수학': '12', '컴퓨터1': '4', '컴퓨터2': '8' },
-    '청량초': { '피아노': '12', '피아노2': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터1': '4', '컴퓨터2': '8' }
+    '청량초': { '피아노': '12', '피아노2': '12', '영어': '8', '영어2': '12', '수학': '8', '컴퓨터1': '4', '컴퓨터2': '8' },
+    '온동네돌봄센터': { '피아노': '4', '피아노2': '4', '영어': '4', '영어2': '4', '수학': '4', '컴퓨터1': '4', '컴퓨터2': '4' }
   };
 
   window.onload = function() {
     if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
-    if (!localStorage.getItem(SCHOOL_KEY)) localStorage.setItem(SCHOOL_KEY, JSON.stringify(['창영초', '청량초']));
+    if (!localStorage.getItem(SCHOOL_KEY)) {
+      localStorage.setItem(SCHOOL_KEY, JSON.stringify(['창영초', '청량초', '온동네돌봄센터']));
+    } else {
+      const curSchools = JSON.parse(localStorage.getItem(SCHOOL_KEY)) || [];
+      if (!curSchools.includes('온동네돌봄센터')) {
+        curSchools.push('온동네돌봄센터');
+        localStorage.setItem(SCHOOL_KEY, JSON.stringify(curSchools));
+      }
+    }
     if (!localStorage.getItem(SETTING_KEY)) localStorage.setItem(SETTING_KEY, JSON.stringify(defaultSchoolSettings));
     
     initSchoolDropdowns();
@@ -421,7 +430,7 @@
   function getRecords() { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
   
   function getSchools() { 
-    const schools = JSON.parse(localStorage.getItem(SCHOOL_KEY)) || ['창영초', '청량초'];
+    const schools = JSON.parse(localStorage.getItem(SCHOOL_KEY)) || ['창영초', '청량초', '온동네돌봄센터'];
     return schools.sort((a, b) => a.localeCompare(b, 'ko'));
   }
   
@@ -631,6 +640,26 @@
     nameLabel.innerText = "강사명";
     lessonsLabel.innerText = "수업차시(표시용)";
 
+    // [특수 로직] 온동네돌봄센터의 안전관리자/돌봄전담사는 '일급 모드'로 자동 전환
+    const isCareCenter = (currentSchool === '온동네돌봄센터');
+    const isCareStaff = (category === '안전관리자' || category === '돌봄전담사');
+
+    if (isCareCenter && isCareStaff) {
+      rateLabel.innerText = '1일 단가';
+      lessonsLabel.innerText = '근무일수(계산반영)';
+      subjectLabel.innerText = "역할/업무명";
+      nameLabel.innerText = "성명";
+      badge.innerText = `● [온동네돌봄센터] ${category} 일급 모드: [일 단가 × 근무일수 + 재료비] 로 자동 정산됩니다.`;
+      badge.style.color = '#eb2f96';
+      if (!currentEditId && (displayLessons.value === '4' || displayLessons.value === '15' || displayLessons.value === '20')) {
+        displayLessons.value = '10';
+      }
+      if (!document.getElementById('subject').value || document.getElementById('subject').value === '축구교실') {
+        document.getElementById('subject').value = category;
+      }
+      return;
+    }
+
     if (category === '맞춤형') {
       rateLabel.innerText = '시간(차시)당 단가';
       lessonsLabel.innerText = '수업차시(계산반영)';
@@ -640,7 +669,7 @@
       return;
     }
 
-    // 코디 / 안전관리자 / 돌봄전담사 정액 모드
+    // 일반 학교의 코디 / 안전관리자 / 돌봄전담사는 기존처럼 월 기본급(정액)
     if (category === '코디' || category === '안전관리자' || category === '돌봄전담사') {
       rateLabel.innerText = '월 기본급 (정액)';
       subjectLabel.innerText = "역할/업무명";
@@ -776,10 +805,18 @@
     const is8 = (document.getElementById('boxDetailed8').style.display !== 'none');
     const is12 = (document.getElementById('boxDetailed12').style.display !== 'none');
 
-    if (category === '맞춤형') {
+    const isCareCenter = (school === '온동네돌봄센터');
+    const isCareStaff = (category === '안전관리자' || category === '돌봄전담사');
+
+    // 1. 온동네돌봄센터 일급 계산식
+    if (isCareCenter && isCareStaff) {
+      const numericDays = Number(displayLessons) || 0;
+      grossPay = Math.round(rateOrSalary * numericDays) + material;
+    } else if (category === '맞춤형') {
       const numericLessons = Number(displayLessons) || 0;
       grossPay = Math.round(rateOrSalary * numericLessons) + material;
     } else if (category === '코디' || category === '안전관리자' || category === '돌봄전담사') {
+      // 일반 학교 정액
       grossPay = rateOrSalary + material;
     } else if (is8) {
       let totalCoursePay = 0;
@@ -1087,7 +1124,7 @@
       return (a.name || '').localeCompare(b.name || '', 'ko');
     });
 
-    let csv = '\uFEFF근무처,구분,과목명,성명,주민등록번호,은행명,은행코드,계좌번호,재료비,수업차시,지급계,경비율제외,특고료,산재보험료,소득세,주민세,실지급액\n';
+    let csv = '\uFEFF근무처,구분,과목명,성명,주민등록번호,은행명,은행코드,계좌번호,재료비,수업차시(일수),지급계,경비율제외,특고료,산재보험료,소득세,주민세,실지급액\n';
     sorted.forEach(r => {
       const rrnStr = (r.rrn || r.birth) ? `\t${r.rrn || r.birth}` : '';
       const accStr = r.accountNumber ? `\t${r.accountNumber}` : '';
