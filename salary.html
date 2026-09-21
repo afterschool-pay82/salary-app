@@ -33,6 +33,8 @@
     .btn-recalc:hover { background: #531dab; }
     .btn-tax { background: #13c2c2; color: #fff; border-color: #13c2c2; font-weight: bold; }
     .btn-tax:hover { background: #08979c; }
+    .btn-split { background: #391085; color: #fff; border-color: #391085; font-weight: bold; }
+    .btn-split:hover { background: #1f074d; }
     .btn-setting { background: #52c41a; color: #fff; border-color: #52c41a; font-weight: bold; }
     .btn-setting:hover { background: #389e0d; }
     .btn-publish { background: #fa8c16; color: #fff; border-color: #fa8c16; font-weight: bold; }
@@ -40,7 +42,7 @@
     .btn-del-school { background: #fff1f0; color: #f5222d; border-color: #ffa39e; }
     .btn-del-school:hover { background: #ffccc7; }
     
-    /* 상단 요약 바 (세무신고 기준) */
+    /* 상단 요약 바 */
     .summary-text { 
       font-size: 13.5px; 
       color: #555; 
@@ -116,22 +118,23 @@
 <div class="main-wrapper">
   <div class="top-header">
     <div class="title-area">
-      <h1>급여지급대장</h1>
+      <h1>급여지급대장 시스템</h1>
       <input type="month" id="activeMonth" class="month-select" value="2026-08" onchange="renderTable()">
     </div>
   </div>
 
   <div class="action-container">
-    <!-- 1열: 색상 있는 기능 버튼 -->
+    <!-- 1열: 주요 기능 버튼 -->
     <div class="action-bar-row">
       <button class="btn btn-primary" onclick="openRecordModal()">정산 등록 (방과후/맞춤형/코디/안전/돌봄)</button>
       <button class="btn btn-recalc" onclick="recalculateAllData(true)">⚡ 전체 데이터 일괄 재계산</button>
       <button class="btn btn-tax" onclick="exportTaxCombinedCSV()">📊 세무신고용 강사별 합산 CSV</button>
+      <button class="btn btn-split" onclick="exportSchoolSplitTransferCSV()">🏦 학교별 분할 이체용 CSV (세금 안분)</button>
       <button class="btn btn-setting" onclick="openSchoolSettingModal()">학교별 회차 설정</button>
       <button class="btn btn-publish" onclick="exportDataJs()">📢 명세서 데이터 발행 (data.js 저장)</button>
     </div>
 
-    <!-- 2열: 검색/필터 및 학교 관리/엑셀 버튼 -->
+    <!-- 2열: 검색/필터 및 학교 관리/기본 엑셀 버튼 -->
     <div class="action-bar-row">
       <select id="schoolFilter" class="school-filter" onchange="renderTable()"></select>
       <input type="text" id="teacherSearchInput" class="search-input" placeholder="강사명 검색" onkeyup="if(event.key==='Enter') searchTeacher();">
@@ -139,7 +142,7 @@
       <button class="btn btn-reset" onclick="resetTeacherSearch()">전체보기</button>
       <button class="btn" onclick="addNewSchoolPrompt()">+ 학교 등록</button>
       <button class="btn btn-del-school" onclick="deleteSchoolPrompt()">- 학교 삭제</button>
-      <button class="btn" onclick="exportCSV()">학교별 대장 CSV 저장</button>
+      <button class="btn" onclick="exportCSV()">학교별 단순 대장 CSV</button>
     </div>
   </div>
 
@@ -170,6 +173,7 @@
         <th rowspan="2">주민등록번호</th>
         <th rowspan="2">은행</th>
         <th rowspan="2">계좌번호</th>
+        <th rowspan="2">기준수수료<br>(단가)</th>
         <th rowspan="2">재료비</th>
         <th rowspan="2">수업차시(일수)</th>
         <th rowspan="2">지급계</th>
@@ -971,6 +975,7 @@
         <td style="font-family:-apple-system, sans-serif; font-size:11.5px;">${rrnMasked}</td>
         <td style="font-size:11.5px; color:#555;">${bInfo}</td>
         <td style="font-size:11.5px; font-family:-apple-system, sans-serif;">${aInfo}</td>
+        <td class="money-col" style="color:#2f54eb; font-weight:600;">${(item.baseRate || 0).toLocaleString()}</td>
         <td class="money-col">${item.material.toLocaleString()}</td>
         <td>${item.lessons}</td>
         <td class="money-col" style="font-weight:bold;">${item.grossPay.toLocaleString()}</td>
@@ -987,9 +992,7 @@
       tbody.appendChild(row);
     });
 
-    // -------------------------------------------------------------
-    // [핵심] 상단 요약 바를 "강사 1인 합산 기준(세무신고 기준)"으로 실시간 산출
-    // -------------------------------------------------------------
+    // 상단 요약 바 (세무신고 기준 1인 합산 계산)
     const grouped = {};
     filtered.forEach(r => {
       const pureRrn = (r.rrn || r.birth || '').replace(/[^0-9]/g, '');
@@ -1035,6 +1038,122 @@
       <span class="divider">|</span>
       <span>총 실지급액 <strong class="total-net">₩${taxCombinedNet.toLocaleString()}</strong></span>
     `;
+  }
+
+  // [신규] 학교별 분할 이체용 CSV (1인 합산 세금을 학교별 금액 비율로 정밀 안분 분할)
+  function exportSchoolSplitTransferCSV() {
+    const records = getRecords();
+    const activeMonth = document.getElementById('activeMonth').value;
+
+    const monthRecords = records.filter(r => r.month === activeMonth);
+    if (monthRecords.length === 0) return alert(`${activeMonth} 월에 등록된 데이터가 없습니다.`);
+
+    // 1. 동일 강사별로 그룹화하여 1인 총액 세금 산출
+    const grouped = {};
+    monthRecords.forEach(r => {
+      const pureRrn = (r.rrn || r.birth || '').replace(/[^0-9]/g, '');
+      const key = `${r.name.trim()}_${pureRrn.slice(0, 6)}`;
+      if (!grouped[key]) {
+        grouped[key] = {
+          items: [],
+          totalGross: 0
+        };
+      }
+      grouped[key].items.push(r);
+      grouped[key].totalGross += (r.grossPay || 0);
+    });
+
+    // 2. 강사별 총 세금을 산출하고, 각 학교별 수수료 비율대로 세금 쪼개기(안분)
+    const splitRows = [];
+
+    Object.values(grouped).forEach(g => {
+      const totalGross = g.totalGross;
+      const combinedTaxes = calculateItemTaxes(totalGross);
+
+      let allocatedSpecialSum = 0;
+      let allocatedIndAccSum = 0;
+      let allocatedIncomeSum = 0;
+      let allocatedLocalSum = 0;
+
+      g.items.forEach((item, idx) => {
+        const isLast = (idx === g.items.length - 1);
+        const ratio = totalGross > 0 ? (item.grossPay / totalGross) : 0;
+
+        let splitSpecial = 0;
+        let splitIndAcc = 0;
+        let splitIncome = 0;
+        let splitLocal = 0;
+
+        if (!isLast) {
+          splitSpecial = Math.round(combinedTaxes.specialTax * ratio);
+          splitIndAcc = Math.round(combinedTaxes.indAccTax * ratio);
+          splitIncome = Math.round(combinedTaxes.incomeTax * ratio);
+          splitLocal = Math.round(combinedTaxes.localTax * ratio);
+
+          allocatedSpecialSum += splitSpecial;
+          allocatedIndAccSum += splitIndAcc;
+          allocatedIncomeSum += splitIncome;
+          allocatedLocalSum += splitLocal;
+        } else {
+          // 마지막 학교는 원단위 오차를 맞춰 총합과 1원까지 일치시킴
+          splitSpecial = combinedTaxes.specialTax - allocatedSpecialSum;
+          splitIndAcc = combinedTaxes.indAccTax - allocatedIndAccSum;
+          splitIncome = combinedTaxes.incomeTax - allocatedIncomeSum;
+          splitLocal = combinedTaxes.localTax - allocatedLocalSum;
+        }
+
+        const totalDeduct = splitSpecial + splitIndAcc + splitIncome + splitLocal;
+        const netPay = item.grossPay - totalDeduct;
+
+        splitRows.push({
+          school: item.school,
+          category: item.category || '방과후',
+          subject: item.subject,
+          name: item.name,
+          rrn: item.rrn || item.birth || '',
+          bankName: item.bankName || '',
+          bankCode: item.bankCode || '',
+          accountNumber: item.accountNumber || '',
+          baseRate: item.baseRate || 0,
+          material: item.material || 0,
+          lessons: item.lessons || '',
+          grossPay: item.grossPay,
+          splitIncome,
+          splitLocal,
+          splitSpecial,
+          splitIndAcc,
+          totalDeduct,
+          netPay
+        });
+      });
+    });
+
+    // 학교명 가나다순, 그 다음 강사명 순으로 정렬
+    splitRows.sort((a, b) => {
+      const sComp = (a.school || '').localeCompare(b.school || '', 'ko');
+      if (sComp !== 0) return sComp;
+      return (a.name || '').localeCompare(b.name || '', 'ko');
+    });
+
+    let csv = '\uFEFF귀속연월,근무학교,구분,과목명(역할),강사명,주민등록번호,입금은행,은행코드,계좌번호,기준수수료(단가),재료비,차시(일수),학교별지급계(세전),안분_소득세(3%),안분_주민세(0.3%),안분_특고고용,안분_산재보험,학교별공제계,학교별실입금액(세후)\n';
+
+    splitRows.forEach(r => {
+      const rrnStr = r.rrn ? `\t${r.rrn}` : '';
+      const accStr = r.accountNumber ? `\t${r.accountNumber}` : '';
+      csv += `${activeMonth},${r.school},${r.category},${r.subject},${r.name},${rrnStr},${r.bankName},${r.bankCode},${accStr},${r.baseRate},${r.material},${r.lessons},${r.grossPay},${r.splitIncome},${r.splitLocal},${r.splitSpecial},${r.splitIndAcc},${r.totalDeduct},${r.netPay}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `학교별_분할이체대장(세금안분)_${activeMonth}.csv`;
+    link.click();
+
+    alert(
+      `✅ [학교별 분할 이체용 CSV]가 생성되었습니다!\n\n` +
+      `여러 학교를 맡은 강사의 합산 세액이 각 학교 지급금액 비율에 맞게 1원 단위까지 완벽히 쪼개져 반영되었습니다.\n` +
+      `학교별 통장에서 분할 송금하실 때 바로 활용하시면 됩니다.`
+    );
   }
 
   function exportTaxCombinedCSV() {
@@ -1175,11 +1294,11 @@
       return (a.name || '').localeCompare(b.name || '', 'ko');
     });
 
-    let csv = '\uFEFF근무처,구분,과목명,성명,주민등록번호,은행명,은행코드,계좌번호,재료비,수업차시(일수),지급계,경비율제외,특고료,산재보험료,소득세,주민세,실지급액\n';
+    let csv = '\uFEFF근무처,구분,과목명,성명,주민등록번호,은행명,은행코드,계좌번호,기준수수료,재료비,수업차시(일수),지급계,경비율제외,특고료,산재보험료,소득세,주민세,실지급액\n';
     sorted.forEach(r => {
       const rrnStr = (r.rrn || r.birth) ? `\t${r.rrn || r.birth}` : '';
       const accStr = r.accountNumber ? `\t${r.accountNumber}` : '';
-      csv += `${r.school},${r.category || '방과후'},${r.subject},${r.name},${rrnStr},${r.bankName || ''},${r.bankCode || ''},${accStr},${r.material},${r.lessons},${r.grossPay},${r.stdPay},${r.specialTax},${r.indAccTax},${r.incomeTax},${r.localTax},${r.netPay}\n`;
+      csv += `${r.school},${r.category || '방과후'},${r.subject},${r.name},${rrnStr},${r.bankName || ''},${r.bankCode || ''},${accStr},${r.baseRate || 0},${r.material},${r.lessons},${r.grossPay},${r.stdPay},${r.specialTax},${r.indAccTax},${r.incomeTax},${r.localTax},${r.netPay}\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
