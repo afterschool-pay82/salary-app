@@ -1335,7 +1335,7 @@ window.PAYROLL_PUBLIC_DATA = [
     "bankName": "",
     "accountNumber": "",
     "material": 0,
-    "lessons": 4,
+    "lessons": "4",
     "baseRate": 24000,
     "counts": {
       "w4": 19
@@ -3036,7 +3036,7 @@ window.PAYROLL_PUBLIC_DATA = [
     "month": "2026-08",
     "subject": "놀이영어",
     "name": "김현미",
-    "birth": "",
+    "birth": "771022",
     "bankName": "",
     "accountNumber": "",
     "material": 0,
