@@ -134,7 +134,7 @@
       font-size: 13px; 
       font-weight: 800; 
       color: #d46b08; 
-      word-break: keep-all;
+      word-break: keep-all; 
       line-height: 1.4;
     }
     .card-category-badge {
@@ -153,16 +153,23 @@
     .count-chip { 
       background: #fffdfa; 
       border: 1px solid #ffc069; 
-      padding: 6px 9px; 
+      padding: 6px 10px; 
       border-radius: 6px; 
       font-size: 12px; 
       color: #333;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 6px;
     }
     .count-chip strong { color: #fa8c16; font-size: 13px; }
-    .chip-pay { color: #666; font-size: 11.5px; font-weight: 600; }
+    .chip-pay { 
+      color: #555; 
+      font-size: 11.5px; 
+      font-weight: 700; 
+      font-family: -apple-system, sans-serif; 
+      white-space: nowrap;
+    }
 
     .card-subtotal-bar {
       border-top: 1px dashed #ffd591;
@@ -236,7 +243,7 @@
       <div class="slip-subtitle" id="subTitleMonth">2026-08 귀속 정산</div>
     </div>
 
-    <!-- 기본 정보 테이블 (3줄 구조) -->
+    <!-- 기본 정보 테이블 -->
     <table class="info-table">
       <tr>
         <th>성 명</th>
@@ -407,7 +414,7 @@
     document.getElementById('infoAccount').innerText = accItem.accountNumber || '-';
 
     // -------------------------------------------------------------
-    // [핵심] 모든 근무처(방과후, 맞춤형, 돌봄, 코디 등) 세분화 카드 렌더링
+    // 근무처별 세분화 카드 렌더링
     // -------------------------------------------------------------
     const boxCounts = document.getElementById('boxCounts');
     const countsContainer = document.getElementById('countsContainer');
@@ -437,7 +444,7 @@
 
       const coursePayOnly = (item.grossPay || 0) - (item.material || 0);
 
-      // 1. 방과후 (차수별 수강인원 데이터가 있는 경우)
+      // 1. 방과후 (요청하신 포맷: (4주 수수료 / 인:24,300원) 형태로 단가 표출)
       if (item.counts && Object.keys(item.counts).length > 0) {
         const keys = Object.keys(item.counts).sort((a, b) => {
           const numA = parseInt(a.replace(/[^0-9]/g, ''), 10);
@@ -451,8 +458,14 @@
           hasAnyStudentCount = true;
 
           let totalMaxLessons = 4;
-          if (validKeys.some(k => k.startsWith('c'))) totalMaxLessons = 12;
-          else if (validKeys.some(k => k.startsWith('e'))) totalMaxLessons = 8;
+          let periodLabel = '4주';
+          if (validKeys.some(k => k.startsWith('c'))) {
+            totalMaxLessons = 12;
+            periodLabel = '12회';
+          } else if (validKeys.some(k => k.startsWith('e'))) {
+            totalMaxLessons = 8;
+            periodLabel = '8회';
+          }
 
           let effectiveBaseRate = Number(item.baseRate) || 0;
           if (!effectiveBaseRate && coursePayOnly > 0) {
@@ -472,34 +485,27 @@
             const num = parseInt(k.replace(/[^0-9]/g, ''), 10);
             totalStudentsSum += count;
 
-            let stepRate = effectiveBaseRate;
-            if (totalMaxLessons !== num && effectiveBaseRate > 0) {
-              stepRate = Math.floor(((effectiveBaseRate / totalMaxLessons) * num) / 10) * 10;
-            }
-
-            let stepPay = stepRate * count;
-            if ((!stepPay || stepPay === 0) && validKeys.length === 1) {
-              stepPay = coursePayOnly;
-            }
+            // 요청하신 표기 포맷 적용: (4주 수수료 / 인:24,300원)
+            const rateFormatted = effectiveBaseRate > 0 ? `(${periodLabel} 수수료 / 인:${effectiveBaseRate.toLocaleString()}원)` : '';
 
             const chip = document.createElement('div');
             chip.className = 'count-chip';
             chip.innerHTML = `
               <span>${num}회 : <strong>${count}명</strong></span>
-              <span class="chip-pay">(${stepPay.toLocaleString()}원)</span>
+              <span class="chip-pay">${rateFormatted}</span>
             `;
             grid.appendChild(chip);
           });
         }
       } 
-      // 2. 맞춤형 프로그램 (차시 × 단가 형태)
+      // 2. 맞춤형 프로그램
       else if (catName === '맞춤형') {
         const chip = document.createElement('div');
         chip.className = 'count-chip';
-        const rateText = item.baseRate ? `단가 ${Number(item.baseRate).toLocaleString()}원` : '';
+        const rateText = item.baseRate ? `(차시 단가 / 인:${Number(item.baseRate).toLocaleString()}원)` : '';
         chip.innerHTML = `
           <span>수업차시 : <strong>${item.lessons || '0'}차시</strong></span>
-          <span class="chip-pay">${rateText ? '(' + rateText + ')' : ''}</span>
+          <span class="chip-pay">${rateText}</span>
         `;
         grid.appendChild(chip);
       }
@@ -507,14 +513,14 @@
       else if (item.school === '온동네돌봄센터' && (catName === '안전관리자' || catName === '돌봄전담사')) {
         const chip = document.createElement('div');
         chip.className = 'count-chip';
-        const rateText = item.baseRate ? `일단가 ${Number(item.baseRate).toLocaleString()}원` : '';
+        const rateText = item.baseRate ? `(1일 단가:${Number(item.baseRate).toLocaleString()}원)` : '';
         chip.innerHTML = `
           <span>근무일수 : <strong>${item.lessons || '0'}일</strong></span>
-          <span class="chip-pay">${rateText ? '(' + rateText + ')' : ''}</span>
+          <span class="chip-pay">${rateText}</span>
         `;
         grid.appendChild(chip);
       }
-      // 4. 일반 정액 근무 (코디, 안전관리자, 돌봄전담사 등)
+      // 4. 일반 정액 근무
       else {
         const chip = document.createElement('div');
         chip.className = 'count-chip';
@@ -525,7 +531,7 @@
         grid.appendChild(chip);
       }
 
-      // 재료비 지원금이 있는 경우 카드 내에 별도 표기
+      // 재료비 지원금 표기
       if (item.material && Number(item.material) > 0) {
         const matChip = document.createElement('div');
         matChip.className = 'count-chip';
@@ -540,7 +546,7 @@
 
       card.appendChild(grid);
 
-      // 하단: 해당 학교 총 지급액(소계) 바
+      // 하단: 해당 학교 총 지급액 소계
       const subtotalBar = document.createElement('div');
       subtotalBar.className = 'card-subtotal-bar';
       subtotalBar.innerHTML = `
@@ -552,7 +558,6 @@
       countsContainer.appendChild(card);
     });
 
-    // 카드가 1개 이상이면 항상 표시하여 세분화 확인 가능
     if (list.length > 0) {
       boxCounts.style.display = 'block';
       if (hasAnyStudentCount) {
@@ -564,9 +569,7 @@
       boxCounts.style.display = 'none';
     }
 
-    // -------------------------------------------------------------
     // 전체 금액 및 세액 계산 (1인 합산 기준)
-    // -------------------------------------------------------------
     let grossPay = 0;
     let material = 0;
 
