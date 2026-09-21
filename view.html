@@ -36,7 +36,7 @@
 
     .container {
       width: 100%;
-      max-width: 620px;
+      max-width: 640px;
       background: #ffffff;
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(250, 140, 22, 0.12), 0 1px 4px rgba(0, 0, 0, 0.05);
@@ -91,7 +91,7 @@
     .slip-title { font-size: 22px; font-weight: 800; margin: 0; color: #111; }
     .slip-subtitle { font-size: 13px; color: #888; margin-top: 4px; }
 
-    /* 정보 테이블 구조 */
+    /* 정보 테이블 */
     .info-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 13px; table-layout: fixed; }
     .info-table th { width: 22%; background: #fffaf0; padding: 9px 8px; text-align: left; color: #777; border: 1px solid #ffe7ba; vertical-align: middle; }
     .info-table td { 
@@ -105,7 +105,7 @@
       vertical-align: middle; 
     }
 
-    /* 차수별 수강인원 2열 레이아웃 */
+    /* 근무처별 세분화 현황 2열 카드 박스 */
     .counts-box { background: #fffaf0; border: 1px solid #ffd591; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; font-size: 13px; }
     .counts-header { font-weight: bold; color: #d46b08; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
     
@@ -114,7 +114,7 @@
       grid-template-columns: repeat(2, 1fr); 
       gap: 12px; 
     }
-    @media (max-width: 480px) {
+    @media (max-width: 520px) {
       .counts-two-col { grid-template-columns: 1fr; }
     }
 
@@ -122,24 +122,38 @@
       background: #ffffff;
       border: 1px solid #ffe7ba;
       border-radius: 8px;
-      padding: 10px 12px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
     }
+    .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
     .school-group-title { 
-      font-size: 12.5px; 
+      font-size: 13px; 
       font-weight: 800; 
       color: #d46b08; 
       word-break: keep-all;
       line-height: 1.4;
     }
+    .card-category-badge {
+      font-size: 10.5px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #fff7e6;
+      color: #d46b08;
+      border: 1px solid #ffd591;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
     
-    .counts-grid { display: flex; flex-direction: column; gap: 6px; }
+    .counts-grid { display: flex; flex-direction: column; gap: 5px; }
     .count-chip { 
       background: #fffdfa; 
       border: 1px solid #ffc069; 
-      padding: 6px 10px; 
+      padding: 6px 9px; 
       border-radius: 6px; 
       font-size: 12px; 
       color: #333;
@@ -149,6 +163,24 @@
     }
     .count-chip strong { color: #fa8c16; font-size: 13px; }
     .chip-pay { color: #666; font-size: 11.5px; font-weight: 600; }
+
+    .card-subtotal-bar {
+      border-top: 1px dashed #ffd591;
+      padding-top: 7px;
+      margin-top: 2px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #555;
+    }
+    .card-subtotal-val {
+      font-size: 13.5px;
+      color: #d46b08;
+      font-weight: 800;
+      font-family: -apple-system, sans-serif;
+    }
 
     .money-section-title { font-size: 14px; font-weight: bold; color: #1f1f1f; margin-bottom: 10px; }
     .calc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px; }
@@ -204,23 +236,20 @@
       <div class="slip-subtitle" id="subTitleMonth">2026-08 귀속 정산</div>
     </div>
 
-    <!-- 3줄로 깔끔해진 정보 테이블 -->
+    <!-- 기본 정보 테이블 (3줄 구조) -->
     <table class="info-table">
-      <!-- 첫째 줄: 성명 / 주민번호 -->
       <tr>
         <th>성 명</th>
         <td id="infoName" style="width:28%;">-</td>
         <th>주민번호</th>
         <td id="infoBirth" style="width:28%; font-family:-apple-system, sans-serif;">-</td>
       </tr>
-      <!-- 둘째 줄: 근무처 / 구분 -->
       <tr>
         <th>근무처</th>
         <td id="infoSchool">-</td>
         <th>구 분</th>
         <td id="infoCategory">-</td>
       </tr>
-      <!-- 셋째 줄: 입금은행 / 계좌번호 -->
       <tr>
         <th>입금은행</th>
         <td id="infoBank">-</td>
@@ -229,15 +258,16 @@
       </tr>
     </table>
 
+    <!-- 근무처별 세분화 현황 카드 영역 -->
     <div id="boxCounts" class="counts-box" style="display:none;">
       <div class="counts-header">
-        <span>■ 차수별 수강인원 현황</span>
+        <span>■ 근무처별 정산 및 수업 현황</span>
         <span id="totalStudentsBadge" style="font-size:12px; color:#d46b08; font-weight:bold;"></span>
       </div>
       <div id="countsContainer" class="counts-two-col"></div>
     </div>
 
-    <div class="money-section-title" id="sectionTitleMoney">■ 정산 및 공제 상세 내역</div>
+    <div class="money-section-title" id="sectionTitleMoney">■ 전체 통합 정산 및 공제 내역</div>
     <table class="calc-table">
       <thead>
         <tr>
@@ -351,11 +381,11 @@
     else if (rawCat === '맞춤형') fullCategoryName = '맞춤형프로그램';
 
     const badge = document.getElementById('badgeCategory');
-    badge.innerText = isMulti ? `통합 정산 (${list.length}건)` : fullCategoryName;
+    badge.innerText = isMulti ? `통합 정산 (${list.length}곳 근무)` : fullCategoryName;
 
     document.getElementById('subTitleMonth').innerText = `${d.month || ''} 귀속 정산`;
     
-    // 1. 첫째 줄: 성명 / 주민번호 (앞 6자리만 안전하게 표출)
+    // 1. 첫째 줄: 성명 / 주민번호 (앞 6자리만 안전 표출)
     document.getElementById('infoName').innerText = d.name || '-';
     document.getElementById('infoBirth').innerText = d.birth || '-';
 
@@ -363,7 +393,7 @@
     if (isMulti) {
       const schoolList = [...new Set(list.map(x => x.school))].join(', ');
       document.getElementById('infoSchool').innerText = schoolList;
-      document.getElementById('infoCategory').innerText = '통합(복수과목)';
+      document.getElementById('infoCategory').innerText = '통합(복수 근무처)';
       document.getElementById('sectionTitleMoney').innerText = '■ 전체 통합 정산 및 공제 내역';
     } else {
       document.getElementById('infoSchool').innerText = d.school || '-';
@@ -377,7 +407,7 @@
     document.getElementById('infoAccount').innerText = accItem.accountNumber || '-';
 
     // -------------------------------------------------------------
-    // 차수별 수강인원 2열 카드 배치 (과목명이 카드 상단에 깔끔하게 표출됨)
+    // [핵심] 모든 근무처(방과후, 맞춤형, 돌봄, 코디 등) 세분화 카드 렌더링
     // -------------------------------------------------------------
     const boxCounts = document.getElementById('boxCounts');
     const countsContainer = document.getElementById('countsContainer');
@@ -387,6 +417,27 @@
     let hasAnyStudentCount = false;
 
     list.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'school-card';
+
+      const catName = item.category || '방과후';
+      const displaySubj = normalizeSubjectName(item.subject);
+
+      // 상단 헤더: [학교명] 과목명 + 구분 뱃지
+      const cardTop = document.createElement('div');
+      cardTop.className = 'card-top';
+      cardTop.innerHTML = `
+        <div class="school-group-title">● [${item.school}] ${displaySubj}</div>
+        <span class="card-category-badge">${catName}</span>
+      `;
+      card.appendChild(cardTop);
+
+      const grid = document.createElement('div');
+      grid.className = 'counts-grid';
+
+      const coursePayOnly = (item.grossPay || 0) - (item.material || 0);
+
+      // 1. 방과후 (차수별 수강인원 데이터가 있는 경우)
       if (item.counts && Object.keys(item.counts).length > 0) {
         const keys = Object.keys(item.counts).sort((a, b) => {
           const numA = parseInt(a.replace(/[^0-9]/g, ''), 10);
@@ -398,20 +449,6 @@
 
         if (validKeys.length > 0) {
           hasAnyStudentCount = true;
-          const displaySubj = normalizeSubjectName(item.subject);
-
-          const card = document.createElement('div');
-          card.className = 'school-card';
-
-          const groupTitle = document.createElement('div');
-          groupTitle.className = 'school-group-title';
-          groupTitle.innerText = `● [${item.school}] ${displaySubj}`;
-          card.appendChild(groupTitle);
-
-          const grid = document.createElement('div');
-          grid.className = 'counts-grid';
-
-          const coursePayOnly = (item.grossPay || 0) - (item.material || 0);
 
           let totalMaxLessons = 4;
           if (validKeys.some(k => k.startsWith('c'))) totalMaxLessons = 12;
@@ -453,21 +490,83 @@
             `;
             grid.appendChild(chip);
           });
-
-          card.appendChild(grid);
-          countsContainer.appendChild(card);
         }
+      } 
+      // 2. 맞춤형 프로그램 (차시 × 단가 형태)
+      else if (catName === '맞춤형') {
+        const chip = document.createElement('div');
+        chip.className = 'count-chip';
+        const rateText = item.baseRate ? `단가 ${Number(item.baseRate).toLocaleString()}원` : '';
+        chip.innerHTML = `
+          <span>수업차시 : <strong>${item.lessons || '0'}차시</strong></span>
+          <span class="chip-pay">${rateText ? '(' + rateText + ')' : ''}</span>
+        `;
+        grid.appendChild(chip);
       }
+      // 3. 온동네돌봄센터 일급 모드
+      else if (item.school === '온동네돌봄센터' && (catName === '안전관리자' || catName === '돌봄전담사')) {
+        const chip = document.createElement('div');
+        chip.className = 'count-chip';
+        const rateText = item.baseRate ? `일단가 ${Number(item.baseRate).toLocaleString()}원` : '';
+        chip.innerHTML = `
+          <span>근무일수 : <strong>${item.lessons || '0'}일</strong></span>
+          <span class="chip-pay">${rateText ? '(' + rateText + ')' : ''}</span>
+        `;
+        grid.appendChild(chip);
+      }
+      // 4. 일반 정액 근무 (코디, 안전관리자, 돌봄전담사 등)
+      else {
+        const chip = document.createElement('div');
+        chip.className = 'count-chip';
+        chip.innerHTML = `
+          <span>근무형태 : <strong>월정액 기본급</strong></span>
+          <span class="chip-pay">(${coursePayOnly.toLocaleString()}원)</span>
+        `;
+        grid.appendChild(chip);
+      }
+
+      // 재료비 지원금이 있는 경우 카드 내에 별도 표기
+      if (item.material && Number(item.material) > 0) {
+        const matChip = document.createElement('div');
+        matChip.className = 'count-chip';
+        matChip.style.background = '#f6ffed';
+        matChip.style.borderColor = '#b7eb8f';
+        matChip.innerHTML = `
+          <span style="color:#389e0d;">재료비 지원금</span>
+          <span class="chip-pay" style="color:#389e0d; font-weight:bold;">+${Number(item.material).toLocaleString()}원</span>
+        `;
+        grid.appendChild(matChip);
+      }
+
+      card.appendChild(grid);
+
+      // 하단: 해당 학교 총 지급액(소계) 바
+      const subtotalBar = document.createElement('div');
+      subtotalBar.className = 'card-subtotal-bar';
+      subtotalBar.innerHTML = `
+        <span>근무처 지급계</span>
+        <span class="card-subtotal-val">${(item.grossPay || 0).toLocaleString()}원</span>
+      `;
+      card.appendChild(subtotalBar);
+
+      countsContainer.appendChild(card);
     });
 
-    if (hasAnyStudentCount) {
+    // 카드가 1개 이상이면 항상 표시하여 세분화 확인 가능
+    if (list.length > 0) {
       boxCounts.style.display = 'block';
-      document.getElementById('totalStudentsBadge').innerText = `총 수강인원: ${totalStudentsSum}명`;
+      if (hasAnyStudentCount) {
+        document.getElementById('totalStudentsBadge').innerText = `총 수강인원: ${totalStudentsSum}명`;
+      } else {
+        document.getElementById('totalStudentsBadge').innerText = `총 ${list.length}개 근무처`;
+      }
     } else {
       boxCounts.style.display = 'none';
     }
 
-    // 금액 계산
+    // -------------------------------------------------------------
+    // 전체 금액 및 세액 계산 (1인 합산 기준)
+    // -------------------------------------------------------------
     let grossPay = 0;
     let material = 0;
 
@@ -497,11 +596,11 @@
     const rowTaxOnly1 = document.getElementById('rowTaxOnly1');
     const titleGrossPay = document.getElementById('titleGrossPay');
 
-    const isFixedStaff = (rawCat === '코디' || rawCat === '안전관리자' || d.subject === '코디' || d.subject === '안전관리자');
+    const isFixedStaff = (rawCat === '코디' || rawCat === '안전관리자' || rawCat === '돌봄전담사' || d.subject === '코디' || d.subject === '안전관리자' || d.subject === '돌봄전담사');
     if (isFixedStaff && !isMulti) {
       rowMaterial.style.display = 'none';
       rowTaxOnly1.style.display = '';
-      titleGrossPay.innerText = '월 기본급 (정액)';
+      titleGrossPay.innerText = (d.school === '온동네돌봄센터') ? '지급계 (일급정산)' : '월 기본급 (정액)';
     } else {
       rowMaterial.style.display = '';
       rowTaxOnly1.style.display = 'none';
