@@ -3019,16 +3019,16 @@ window.PAYROLL_PUBLIC_DATA = [
     "bankName": "국민은행",
     "accountNumber": "92030201189972",
     "material": 0,
-    "lessons": "8",
+    "lessons": "1",
     "baseRate": 80000,
     "counts": {},
-    "grossPay": 640000,
-    "stdPay": 516480,
+    "grossPay": 80000,
+    "stdPay": 64560,
     "specialTax": 0,
-    "indAccTax": 1700,
-    "incomeTax": 19200,
-    "localTax": 1920,
-    "netPay": 617180
+    "indAccTax": 210,
+    "incomeTax": 2400,
+    "localTax": 240,
+    "netPay": 77150
   },
   {
     "school": "온동네돌봄센터",
