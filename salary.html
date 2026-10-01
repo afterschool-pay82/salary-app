@@ -29,6 +29,8 @@
     .btn-reset:hover { background: #e8e8e8; }
     .btn-primary { background: #1890ff; color: #fff; border-color: #1890ff; font-weight: bold; }
     .btn-primary:hover { background: #096dd9; }
+    .btn-copy { background: #009688; color: #fff; border-color: #009688; font-weight: bold; }
+    .btn-copy:hover { background: #00796b; }
     .btn-recalc { background: #722ed1; color: #fff; border-color: #722ed1; font-weight: bold; }
     .btn-recalc:hover { background: #531dab; }
     .btn-tax { background: #13c2c2; color: #fff; border-color: #13c2c2; font-weight: bold; }
@@ -127,6 +129,7 @@
     <!-- 1열: 주요 기능 버튼 -->
     <div class="action-bar-row">
       <button class="btn btn-primary" onclick="openRecordModal()">정산 등록 (방과후/맞춤형/코디/안전/돌봄)</button>
+      <button class="btn btn-copy" onclick="copyPreviousMonthData()">📋 전월 데이터 복사</button>
       <button class="btn btn-recalc" onclick="recalculateAllData(true)">⚡ 전체 데이터 일괄 재계산</button>
       <button class="btn btn-tax" onclick="exportTaxCombinedCSV()">📊 세무신고용 강사별 합산 CSV</button>
       <button class="btn btn-split" onclick="exportSchoolSplitTransferCSV()">🏦 학교별 분할 이체용 CSV (세금 안분)</button>
@@ -505,6 +508,80 @@
     initSchoolDropdowns();
     renderTable();
     alert(`[${targetSchool}] 학교가 삭제되었습니다.`);
+  }
+
+  // [신규] 전월 데이터 복사해서 당월로 일괄 등록하는 기능
+  function copyPreviousMonthData() {
+    const currentMonth = document.getElementById('activeMonth').value; // 예: "2026-09"
+    if (!currentMonth) return alert('지급월을 먼저 선택해 주세요.');
+
+    // 직전 월 계산 (예: 2026-09 -> 2026-08)
+    const [curYear, curMon] = currentMonth.split('-').map(Number);
+    let prevYear = curYear;
+    let prevMon = curMon - 1;
+    if (prevMon === 0) {
+      prevMon = 12;
+      prevYear -= 1;
+    }
+    const defaultSourceMonth = `${prevYear}-${String(prevMon).padStart(2, '0')}`;
+
+    const sourceMonth = prompt(
+      `어느 월의 데이터를 복사하여 [${currentMonth}] 당월 데이터로 가져오시겠습니까? (형식: YYYY-MM)`,
+      defaultSourceMonth
+    );
+
+    if (!sourceMonth || !sourceMonth.trim()) return;
+    const cleanSourceMonth = sourceMonth.trim();
+
+    if (cleanSourceMonth === currentMonth) {
+      return alert('복사할 원본 월과 현재 당월이 동일합니다. 이전 달을 지정해 주세요.');
+    }
+
+    let records = getRecords();
+    const sourceRecords = records.filter(r => r.month === cleanSourceMonth);
+
+    if (sourceRecords.length === 0) {
+      return alert(`[${cleanSourceMonth}] 월에 등록된 데이터가 없습니다. 원본 월을 다시 확인해 주세요.`);
+    }
+
+    // 당월에 이미 데이터가 있는지 확인
+    const currentMonthExisting = records.filter(r => r.month === currentMonth);
+    let overwrite = false;
+    if (currentMonthExisting.length > 0) {
+      const confirmOverwrite = confirm(
+        `현재 선택된 당월 [${currentMonth}]에 이미 ${currentMonthExisting.length}건의 데이터가 존재합니다.\n\n` +
+        `[확인]을 누르면 당월 데이터를 전월 데이터(${sourceRecords.length}건)로 새로 교체(덮어쓰기)합니다.\n` +
+        `[취소]를 누르면 작업을 중단합니다.`
+      );
+      if (!confirmOverwrite) return;
+      overwrite = true;
+    }
+
+    // 덮어쓰기일 경우 당월 기존 데이터 제거
+    if (overwrite) {
+      records = records.filter(r => r.month !== currentMonth);
+    }
+
+    // 원본 데이터 복제 (ID 새로 부여, month를 당월로 교체)
+    let newIdBase = Date.now();
+    const clonedRecords = sourceRecords.map((item, idx) => {
+      return {
+        ...item,
+        id: newIdBase + idx,
+        month: currentMonth
+      };
+    });
+
+    records.push(...clonedRecords);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+
+    // 최신 기준으로 자동 재계산 및 테이블 리렌더링
+    recalculateAllData(false);
+
+    alert(
+      `✅ [${cleanSourceMonth}] 데이터 ${clonedRecords.length}건이\n` +
+      `[${currentMonth}] 당월 데이터로 성공적으로 복사되었습니다!`
+    );
   }
 
   function openSchoolSettingModal() {
@@ -1040,7 +1117,7 @@
     `;
   }
 
-  // [신규] 학교별 분할 이체용 CSV (1인 합산 세금을 학교별 금액 비율로 정밀 안분 분할)
+  // 학교별 분할 이체용 CSV (1인 합산 세금을 학교별 금액 비율로 정밀 안분 분할)
   function exportSchoolSplitTransferCSV() {
     const records = getRecords();
     const activeMonth = document.getElementById('activeMonth').value;
@@ -1048,7 +1125,6 @@
     const monthRecords = records.filter(r => r.month === activeMonth);
     if (monthRecords.length === 0) return alert(`${activeMonth} 월에 등록된 데이터가 없습니다.`);
 
-    // 1. 동일 강사별로 그룹화하여 1인 총액 세금 산출
     const grouped = {};
     monthRecords.forEach(r => {
       const pureRrn = (r.rrn || r.birth || '').replace(/[^0-9]/g, '');
@@ -1063,7 +1139,6 @@
       grouped[key].totalGross += (r.grossPay || 0);
     });
 
-    // 2. 강사별 총 세금을 산출하고, 각 학교별 수수료 비율대로 세금 쪼개기(안분)
     const splitRows = [];
 
     Object.values(grouped).forEach(g => {
@@ -1095,7 +1170,6 @@
           allocatedIncomeSum += splitIncome;
           allocatedLocalSum += splitLocal;
         } else {
-          // 마지막 학교는 원단위 오차를 맞춰 총합과 1원까지 일치시킴
           splitSpecial = combinedTaxes.specialTax - allocatedSpecialSum;
           splitIndAcc = combinedTaxes.indAccTax - allocatedIndAccSum;
           splitIncome = combinedTaxes.incomeTax - allocatedIncomeSum;
@@ -1128,7 +1202,6 @@
       });
     });
 
-    // 학교명 가나다순, 그 다음 강사명 순으로 정렬
     splitRows.sort((a, b) => {
       const sComp = (a.school || '').localeCompare(b.school || '', 'ko');
       if (sComp !== 0) return sComp;
