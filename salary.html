@@ -134,6 +134,7 @@
       <button class="btn btn-split" onclick="exportSchoolSplitTransferCSV()">🏦 학교별 분할 이체용 CSV (세금 안분)</button>
       <button class="btn btn-setting" onclick="openSchoolSettingModal()">학교별 회차 설정</button>
       <button class="btn btn-publish" onclick="exportDataJs()">📢 명세서 데이터 발행 (data.js 저장)</button>
+      <button class="btn btn-primary" onclick="downloadFullBackup()">💾 급여 전체 백업</button>
     </div>
 
     <div class="action-bar-row">
@@ -443,6 +444,38 @@
     const bName = document.getElementById('bankName').value.trim();
     if (bankCodeMap[bName]) {
       document.getElementById('bankCode').value = bankCodeMap[bName];
+    }
+  }
+
+  // 백업 전용: 로컬 저장소의 원본 문자열을 읽기만 하며 기존 데이터를 변경하지 않습니다.
+  function downloadFullBackup() {
+    const keys = [STORAGE_KEY, SCHOOL_KEY, SETTING_KEY];
+    const snapshot = {};
+    try {
+      for (const key of keys) {
+        const raw = localStorage.getItem(key);
+        if (raw === null) throw new Error(`${key} 자료를 찾지 못했습니다.`);
+        JSON.parse(raw); // JSON 형식 검증. 원본 문자열을 그대로 보존합니다.
+        snapshot[key] = raw;
+      }
+      const records = JSON.parse(snapshot[STORAGE_KEY]);
+      if (!Array.isArray(records)) throw new Error('급여자료 형식이 올바르지 않습니다.');
+      if (!confirm(`현재 브라우저의 급여자료 ${records.length}건과 학교 목록, 회차 설정을 백업합니다.\n\n백업 파일에는 주민등록번호와 계좌번호가 포함될 수 있습니다. 안전한 개인 폴더에만 보관하세요.\n\n백업 파일을 다운로드할까요?`)) return;
+      const now = new Date();
+      const stamp = [now.getFullYear(), String(now.getMonth()+1).padStart(2,'0'), String(now.getDate()).padStart(2,'0')].join('-');
+      const payload = JSON.stringify({ format: 'afterschool-payroll-backup-v1', createdAt: now.toISOString(), recordCount: records.length, data: snapshot }, null, 2);
+      const blob = new Blob([payload], {type:'application/json;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `급여전체백업_${stamp}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      alert('백업 파일 다운로드를 요청했습니다. 다운로드 폴더에서 파일이 실제 저장됐는지 확인해주세요.');
+    } catch (error) {
+      alert('백업을 진행하지 못했습니다: ' + error.message + '\n기존 급여자료는 변경되지 않았습니다.');
     }
   }
 
