@@ -267,7 +267,7 @@
       <tr>
         <th>입금은행</th>
         <td id="infoBank">-</td>
-        <th>계좌번호</th>
+        <th>계좌정보</th>
         <td id="infoAccount" style="font-family:-apple-system, sans-serif;">-</td>
       </tr>
     </table>
@@ -437,7 +437,7 @@
     // 3. 셋째 줄: 입금은행 / 계좌번호
     const accItem = list.find(x => x.accountNumber) || d;
     document.getElementById('infoBank').innerText = accItem.bankName || '-';
-    document.getElementById('infoAccount').innerText = accItem.accountNumber || '-';
+    document.getElementById('infoAccount').innerText = '공개하지 않음';
 
     // -------------------------------------------------------------
     // 근무처별 세분화 카드 렌더링
