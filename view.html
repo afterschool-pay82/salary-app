@@ -9,7 +9,7 @@
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="(주)밝은생각">
   <meta property="og:title" content="(주)밝은생각 급여명세서 조회">
-  <meta property="og:description" content="성명과 생년월일(6자리)을 입력하여 이번 달 명세서를 확인하세요.">
+  <meta property="og:description" content="성명과 생년월일(6자리)을 입력하여 조회할 지급월을 선택해 급여명세서를 확인하세요.">
   <meta property="og:image" content="https://afterschool-pay82.github.io/salary-app/kakao.jpg">
   <meta property="og:image:width" content="800">
   <meta property="og:image:height" content="800">
@@ -231,6 +231,13 @@
       <input type="password" id="birthInput" class="auth-input" placeholder="예: 123456" maxlength="6" inputmode="numeric">
     </div>
 
+    <div class="auth-input-wrap">
+      <label for="monthInput">급여 지급월</label>
+      <select id="monthInput" class="auth-input" aria-label="급여 지급월">
+        <option value="">지급월을 선택해 주세요</option>
+      </select>
+    </div>
+
     <button class="btn-auth" onclick="verifyUser()">명세서 확인하기</button>
   </div>
 
@@ -340,13 +347,30 @@
   (function loadLatestDataScript() {
     const script = document.createElement('script');
     script.src = 'data.js?t=' + new Date().getTime();
+    script.addEventListener('load', () => { if (document.getElementById('monthInput')) populateMonths(); });
     document.head.appendChild(script);
   })();
 
   window.onload = function() {
     document.getElementById('nameInput').addEventListener('keyup', e => { if (e.key === 'Enter') document.getElementById('birthInput').focus(); });
-    document.getElementById('birthInput').addEventListener('keyup', e => { if (e.key === 'Enter') verifyUser(); });
+    document.getElementById('birthInput').addEventListener('keyup', e => { if (e.key === 'Enter') document.getElementById('monthInput').focus(); });
+    populateMonths();
   };
+
+  function populateMonths() {
+    const select = document.getElementById('monthInput');
+    const previous = select.value;
+    const db = Array.isArray(window.PAYROLL_PUBLIC_DATA) ? window.PAYROLL_PUBLIC_DATA : [];
+    const months = [...new Set(db.map(item => String(item.month || '').trim()).filter(month => /^\d{4}-(0[1-9]|1[0-2])$/.test(month)))].sort().reverse();
+    select.innerHTML = '<option value="">지급월을 선택해 주세요</option>';
+    months.forEach(month => {
+      const option = document.createElement('option');
+      option.value = month;
+      option.textContent = month.replace('-', '년 ') + '월';
+      select.appendChild(option);
+    });
+    if (months.includes(previous)) select.value = previous;
+  }
 
   function normalizeSubjectName(subj) {
     if (!subj) return '';
@@ -358,19 +382,21 @@
   function verifyUser() {
     const name = document.getElementById('nameInput').value.trim();
     const birth = document.getElementById('birthInput').value.trim();
+    const month = document.getElementById('monthInput').value;
 
     if (!name) return alert("성명을 입력해 주세요.");
     if (!birth) return alert("생년월일 6자리를 입력해 주세요.");
+    if (!month) return alert("급여 지급월을 선택해 주세요.");
 
     const db = window.PAYROLL_PUBLIC_DATA || [];
     if (db.length === 0) {
       return alert("GitHub에 [data.js] 파일이 아직 업로드되지 않았거나 로딩 중입니다.\n저장소에 data.js 파일이 올라가 있는지 확인해 주세요.");
     }
 
-    const matchedList = db.filter(item => item.name === name && item.birth === birth);
+    const matchedList = db.filter(item => item.name === name && item.birth === birth && String(item.month || "").trim() === month);
 
     if (matchedList.length === 0) {
-      return alert("일치하는 급여 정보가 없습니다.\n성명(" + name + ")과 생년월일(앞 6자리)을 다시 확인해 주세요.");
+      return alert("일치하는 급여 정보가 없습니다.\n성명(" + name + "), 생년월일과 지급월을 다시 확인해 주세요.");
     }
 
     renderSlip(matchedList);
