@@ -121,12 +121,11 @@
   <div class="top-header">
     <div class="title-area">
       <h1>급여지급대장 시스템</h1>
-      <input type="month" id="activeMonth" class="month-select" value="2026-08" onchange="renderTable()">
+      <input type="month" id="activeMonth" class="month-select" onchange="renderTable()">
     </div>
   </div>
 
   <div class="action-container">
-    <!-- 1열: 주요 기능 버튼 -->
     <div class="action-bar-row">
       <button class="btn btn-primary" onclick="openRecordModal()">정산 등록 (방과후/맞춤형/코디/안전/돌봄)</button>
       <button class="btn btn-copy" onclick="copyPreviousMonthData()">📋 전월 데이터 복사</button>
@@ -137,7 +136,6 @@
       <button class="btn btn-publish" onclick="exportDataJs()">📢 명세서 데이터 발행 (data.js 저장)</button>
     </div>
 
-    <!-- 2열: 검색/필터 및 학교 관리/기본 엑셀 버튼 -->
     <div class="action-bar-row">
       <select id="schoolFilter" class="school-filter" onchange="renderTable()"></select>
       <input type="text" id="teacherSearchInput" class="search-input" placeholder="강사명 검색" onkeyup="if(event.key==='Enter') searchTeacher();">
@@ -149,7 +147,6 @@
     </div>
   </div>
 
-  <!-- 합계 요약 바 (세무신고 1인 합산 기준 실시간 반영) -->
   <div class="summary-text" id="summaryCounter">
     <span><span class="tax-badge-info">세무신고합산기준</span>총 0명</span>
     <span class="divider">|</span>
@@ -196,7 +193,6 @@
   </table>
 </div>
 
-<!-- 학교별 과목 설정 모달 -->
 <div class="modal-overlay" id="settingModal">
   <div class="modal-content" style="width: 700px;">
     <div class="modal-top">
@@ -228,7 +224,6 @@
   </div>
 </div>
 
-<!-- 정산 등록 및 수정 모달 -->
 <div class="modal-overlay" id="recordModal">
   <div class="modal-content">
     <div class="modal-top">
@@ -236,7 +231,6 @@
       <button class="close-icon" onclick="closeRecordModal()">&times;</button>
     </div>
 
-    <!-- 구분 선택 -->
     <div class="type-selector-bar">
       <span>구분 선택:</span>
       <label><input type="radio" name="calcCategory" value="방과후" checked onchange="onChangeCategory()"> 방과후프로그램</label>
@@ -253,7 +247,7 @@
       </div>
       <div class="input-item">
         <label>지급월 선택</label>
-        <input type="month" id="modalMonth" value="2026-08">
+        <input type="month" id="modalMonth">
       </div>
       <div class="input-item">
         <label style="font-weight:bold; color:#1d39c4;">주민등록번호</label>
@@ -276,7 +270,6 @@
       </div>
     </div>
 
-    <!-- 계좌 정보 섹션 -->
     <div class="bank-box">
       <div class="bank-title">💳 급여 입금 계좌 정보</div>
       <div class="row-grid-3" style="margin-bottom:0;">
@@ -394,6 +387,18 @@
     '온동네돌봄센터': { '피아노': '4', '피아노2': '4', '영어': '4', '영어2': '4', '수학': '4', '컴퓨터1': '4', '컴퓨터2': '4' }
   };
 
+  // 현재 날짜의 이전 달(전월) 구하기 (YYYY-MM)
+  function getPreviousMonthString() {
+    const now = new Date();
+    let year = now.getFullYear();
+    let month = now.getMonth(); // 0: 1월, 8: 9월, 9: 10월
+    if (month === 0) {
+      month = 12;
+      year -= 1;
+    }
+    return `${year}-${String(month).padStart(2, '0')}`;
+  }
+
   window.onload = function() {
     if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     if (!localStorage.getItem(SCHOOL_KEY)) {
@@ -407,6 +412,9 @@
     }
     if (!localStorage.getItem(SETTING_KEY)) localStorage.setItem(SETTING_KEY, JSON.stringify(defaultSchoolSettings));
     
+    // 지급월을 현재 달 기준 전월로 자동 설정 (예: 10월 접속 시 -> 09월)
+    document.getElementById('activeMonth').value = getPreviousMonthString();
+
     initSchoolDropdowns();
     recalculateAllData(false);
   };
@@ -510,12 +518,10 @@
     alert(`[${targetSchool}] 학교가 삭제되었습니다.`);
   }
 
-  // [신규] 전월 데이터 복사해서 당월로 일괄 등록하는 기능
   function copyPreviousMonthData() {
-    const currentMonth = document.getElementById('activeMonth').value; // 예: "2026-09"
+    const currentMonth = document.getElementById('activeMonth').value;
     if (!currentMonth) return alert('지급월을 먼저 선택해 주세요.');
 
-    // 직전 월 계산 (예: 2026-09 -> 2026-08)
     const [curYear, curMon] = currentMonth.split('-').map(Number);
     let prevYear = curYear;
     let prevMon = curMon - 1;
@@ -544,7 +550,6 @@
       return alert(`[${cleanSourceMonth}] 월에 등록된 데이터가 없습니다. 원본 월을 다시 확인해 주세요.`);
     }
 
-    // 당월에 이미 데이터가 있는지 확인
     const currentMonthExisting = records.filter(r => r.month === currentMonth);
     let overwrite = false;
     if (currentMonthExisting.length > 0) {
@@ -557,12 +562,10 @@
       overwrite = true;
     }
 
-    // 덮어쓰기일 경우 당월 기존 데이터 제거
     if (overwrite) {
       records = records.filter(r => r.month !== currentMonth);
     }
 
-    // 원본 데이터 복제 (ID 새로 부여, month를 당월로 교체)
     let newIdBase = Date.now();
     const clonedRecords = sourceRecords.map((item, idx) => {
       return {
@@ -575,7 +578,6 @@
     records.push(...clonedRecords);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
 
-    // 최신 기준으로 자동 재계산 및 테이블 리렌더링
     recalculateAllData(false);
 
     alert(
@@ -1069,7 +1071,6 @@
       tbody.appendChild(row);
     });
 
-    // 상단 요약 바 (세무신고 기준 1인 합산 계산)
     const grouped = {};
     filtered.forEach(r => {
       const pureRrn = (r.rrn || r.birth || '').replace(/[^0-9]/g, '');
@@ -1117,7 +1118,6 @@
     `;
   }
 
-  // 학교별 분할 이체용 CSV (1인 합산 세금을 학교별 금액 비율로 정밀 안분 분할)
   function exportSchoolSplitTransferCSV() {
     const records = getRecords();
     const activeMonth = document.getElementById('activeMonth').value;
@@ -1222,11 +1222,7 @@
     link.download = `학교별_분할이체대장(세금안분)_${activeMonth}.csv`;
     link.click();
 
-    alert(
-      `✅ [학교별 분할 이체용 CSV]가 생성되었습니다!\n\n` +
-      `여러 학교를 맡은 강사의 합산 세액이 각 학교 지급금액 비율에 맞게 1원 단위까지 완벽히 쪼개져 반영되었습니다.\n` +
-      `학교별 통장에서 분할 송금하실 때 바로 활용하시면 됩니다.`
-    );
+    alert(`✅ [학교별 분할 이체용 CSV]가 생성되었습니다!`);
   }
 
   function exportTaxCombinedCSV() {
@@ -1295,10 +1291,7 @@
     link.download = `세무신고용_강사별합산급여대장_${activeMonth}.csv`;
     link.click();
 
-    alert(
-      `✅ [세무신고용 강사별 합산 CSV]가 다운로드되었습니다!\n\n` +
-      `총 ${list.length}명의 강사 주민번호 13자리 전체 및 계좌정보가 포함되어 원천세 신고 자료로 바로 활용하실 수 있습니다.`
-    );
+    alert(`✅ [세무신고용 강사별 합산 CSV]가 다운로드되었습니다!`);
   }
 
   function exportDataJs() {
@@ -1345,8 +1338,6 @@
 
     alert(
       "✅ [data.js] 파일이 다운로드되었습니다!\n\n" +
-      "강사님 조회용 파일이므로 주민번호 뒷자리는 자동으로 안전하게 제외되고\n" +
-      "생년월일(앞 6자리)만 저장되었습니다.\n\n" +
       "GitHub 저장소에 덮어쓰기 업로드해 주세요."
     );
   }
