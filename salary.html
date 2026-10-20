@@ -1309,7 +1309,7 @@
           rrn: r.rrn || r.birth || '',
           bankName: r.bankName || '',
           bankCode: r.bankCode || '',
-          accountNumber: r.accountNumber || '',
+          // 공개 명세서 데이터에는 계좌번호를 포함하지 않습니다.
           schools: [],
           categories: [],
           subjects: [],
@@ -1380,7 +1380,7 @@
         name: r.name.trim(),
         birth: safeBirth,
         bankName: r.bankName || '',
-        accountNumber: r.accountNumber || '',
+        // 공개 명세서 데이터에는 계좌번호를 포함하지 않습니다.
         material: r.material,
         lessons: r.lessons,
         baseRate: r.baseRate || 0,
@@ -1404,7 +1404,7 @@
 
     alert(
       "✅ [data.js] 파일이 다운로드되었습니다!\n\n" +
-      "GitHub 저장소에 덮어쓰기 업로드해 주세요."
+      "주의: 이름·생년월일·급여액은 여전히 공개됩니다. 인증 서버 구축 전에는 GitHub에 업로드하지 마세요."
     );
   }
 
