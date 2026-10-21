@@ -296,6 +296,12 @@
           <td class="col-title">사업소득세 (3%)</td>
           <td class="col-val" id="valIncomeTax">0원</td>
         </tr>
+        <tr id="rowPrevAdjustment" style="display:none;">
+          <td class="col-title" id="labelPrevAddition">전월 추가분</td>
+          <td class="col-val" id="valPrevAddition">0원</td>
+          <td class="col-title" id="labelPrevDeduction">전월 차감분</td>
+          <td class="col-val" id="valPrevDeduction">0원</td>
+        </tr>
         <tr id="rowMaterial">
           <td class="col-title">재료비 지원금</td>
           <td class="col-val" id="valMaterial">0원</td>
@@ -598,10 +604,14 @@
     // 전체 금액 및 세액 계산 (1인 합산 기준)
     let grossPay = 0;
     let material = 0;
+    let prevAddition = 0;
+    let prevDeduction = 0;
 
     list.forEach(item => {
       grossPay += (item.grossPay || 0);
       material += (item.material || 0);
+      prevAddition += Number(item.prevAddition) || 0;
+      prevDeduction += Number(item.prevDeduction) || 0;
     });
 
     const stdPay = Math.round(grossPay * (1 - 0.193));
@@ -619,7 +629,7 @@
     const incomeTax = Math.floor((grossPay * 0.03) / 10) * 10;
     const localTax = Math.floor((incomeTax * 0.1) / 10) * 10;
     const totalDeduct = specialTax + indAccTax + incomeTax + localTax;
-    const netPay = grossPay - totalDeduct;
+    const netPay = grossPay - totalDeduct + prevAddition - prevDeduction;
 
     const rowMaterial = document.getElementById('rowMaterial');
     const rowTaxOnly1 = document.getElementById('rowTaxOnly1');
@@ -636,6 +646,14 @@
       titleGrossPay.innerText = isMulti ? '총 수수료(기본급)' : '지급계 (수수료)';
     }
 
+    const adjustmentRow = document.getElementById('rowPrevAdjustment');
+    adjustmentRow.style.display = (prevAddition > 0 || prevDeduction > 0) ? '' : 'none';
+    document.getElementById('labelPrevAddition').style.visibility = prevAddition > 0 ? 'visible' : 'hidden';
+    document.getElementById('valPrevAddition').style.visibility = prevAddition > 0 ? 'visible' : 'hidden';
+    document.getElementById('labelPrevDeduction').style.visibility = prevDeduction > 0 ? 'visible' : 'hidden';
+    document.getElementById('valPrevDeduction').style.visibility = prevDeduction > 0 ? 'visible' : 'hidden';
+    document.getElementById('valPrevAddition').innerText = '+' + prevAddition.toLocaleString() + '원';
+    document.getElementById('valPrevDeduction').innerText = '-' + prevDeduction.toLocaleString() + '원';
     document.getElementById('valGrossPay').innerText = grossPay.toLocaleString() + '원';
     document.getElementById('valMaterial').innerText = material.toLocaleString() + '원';
     document.getElementById('valTotalGross').innerText = grossPay.toLocaleString() + '원';
