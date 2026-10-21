@@ -179,6 +179,8 @@
         <th rowspan="2">재료비</th>
         <th rowspan="2">수업차시(일수)</th>
         <th rowspan="2">지급계</th>
+        <th rowspan="2">전월 추가분</th>
+        <th rowspan="2">전월 차감분</th>
         <th rowspan="2">경비율제외<br>(19.3% 공제)</th>
         <th rowspan="2">특고료</th>
         <th rowspan="2">산재<br>보험료</th>
@@ -360,6 +362,14 @@
       <div class="input-item"><label>비고</label><input type="text" id="note" placeholder="특이사항"></div>
     </div>
 
+    <div class="grid-wrap" style="background:#fffaf0;border-color:#ffd591;">
+      <div style="font-weight:bold;color:#ad6800;margin-bottom:9px;">전월 급여 조정 (실지급액에 반영)</div>
+      <div class="row-grid-3" style="margin-bottom:0;">
+        <div class="input-item"><label>전월 추가분 (+)</label><input type="number" id="prevAddition" min="0" step="1" value="0"></div>
+        <div class="input-item"><label>전월 차감분 (-)</label><input type="number" id="prevDeduction" min="0" step="1" value="0"></div>
+        <div style="font-size:12px;color:#8c6d1f;align-self:center;">기본 세금 계산은 변경하지 않습니다.</div>
+      </div>
+    </div>
     <div class="modal-bottom">
       <button class="btn-modal-cancel" onclick="closeRecordModal()">취소</button>
       <button class="btn-modal-save" id="btnSaveRecord" onclick="saveRecordFromModal()">저장</button>
@@ -629,7 +639,9 @@
       return {
         ...item,
         id: newIdBase + idx,
-        month: currentMonth
+        month: currentMonth,
+        prevAddition: 0,
+        prevDeduction: 0
       };
     });
 
@@ -750,6 +762,8 @@
     document.getElementById('material').value = '0';
     document.getElementById('displayLessons').value = '4';
     document.getElementById('note').value = '';
+    document.getElementById('prevAddition').value = '0';
+    document.getElementById('prevDeduction').value = '0';
     clearAllCountInputs();
 
     onChangeCategory();
@@ -779,6 +793,8 @@
     document.getElementById('material').value = item.material || 0;
     document.getElementById('displayLessons').value = item.lessons || '4';
     document.getElementById('note').value = item.note || '';
+    document.getElementById('prevAddition').value = item.prevAddition || 0;
+    document.getElementById('prevDeduction').value = item.prevDeduction || 0;
 
     clearAllCountInputs();
     if (item.counts) {
@@ -930,6 +946,11 @@
     return { stdPay, specialTax, indAccTax, incomeTax, localTax, netPay };
   }
 
+  // 전월 조정액은 세전 수업료와 별도로 실입금액에 가감합니다.
+  function adjustmentNet(item) {
+    return (Number(item.prevAddition) || 0) - (Number(item.prevDeduction) || 0);
+  }
+
   function recalculateAllData(showAlert) {
     let records = getRecords();
     if (records.length === 0) {
@@ -947,7 +968,7 @@
         indAccTax: taxes.indAccTax,
         incomeTax: taxes.incomeTax,
         localTax: taxes.localTax,
-        netPay: taxes.netPay
+        netPay: taxes.netPay + adjustmentNet(item)
       };
     });
 
@@ -978,6 +999,9 @@
     const material = Number(document.getElementById('material').value) || 0;
     let displayLessons = document.getElementById('displayLessons').value.trim();
     const note = document.getElementById('note').value;
+    const prevAddition = Number(document.getElementById('prevAddition').value || 0);
+    const prevDeduction = Number(document.getElementById('prevDeduction').value || 0);
+    if (![prevAddition, prevDeduction].every(v => Number.isSafeInteger(v) && v >= 0)) return alert('전월 추가분과 차감분은 0 이상의 정수 금액으로 입력하세요.');
 
     if (!name.trim()) return alert('성명/강사명을 입력하세요.');
 
@@ -1051,14 +1075,14 @@
       birth: birth,
       bankName, bankCode, accountNumber,
       material, lessons: displayLessons,
-      baseRate: rateOrSalary, counts, note,
+      baseRate: rateOrSalary, counts, note, prevAddition, prevDeduction,
       grossPay,
       stdPay: taxes.stdPay,
       specialTax: taxes.specialTax,
       indAccTax: taxes.indAccTax,
       incomeTax: taxes.incomeTax,
       localTax: taxes.localTax,
-      netPay: taxes.netPay
+      netPay: taxes.netPay + prevAddition - prevDeduction
     };
 
     if (currentEditId) {
@@ -1124,6 +1148,8 @@
         <td class="money-col">${item.material.toLocaleString()}</td>
         <td>${item.lessons}</td>
         <td class="money-col" style="font-weight:bold;">${item.grossPay.toLocaleString()}</td>
+        <td class="money-col">${(Number(item.prevAddition) || 0).toLocaleString()}</td>
+        <td class="money-col">${(Number(item.prevDeduction) || 0).toLocaleString()}</td>
         <td class="money-col">${item.stdPay.toLocaleString()}</td>
         <td class="money-col">${item.specialTax ? item.specialTax.toLocaleString() : '0'}</td>
         <td class="money-col">${item.indAccTax.toLocaleString()}</td>
@@ -1142,9 +1168,10 @@
       const pureRrn = (r.rrn || r.birth || '').replace(/[^0-9]/g, '');
       const key = `${r.name.trim()}_${pureRrn.slice(0, 6)}`;
       if (!grouped[key]) {
-        grouped[key] = { gross: 0 };
+        grouped[key] = { gross: 0, adjustment: 0 };
       }
       grouped[key].gross += (r.grossPay || 0);
+      grouped[key].adjustment += adjustmentNet(r);
     });
 
     let taxCombinedGross = 0;
@@ -1161,7 +1188,7 @@
       taxCombinedLocal += taxes.localTax;
       taxCombinedSpecial += taxes.specialTax;
       taxCombinedIndAcc += taxes.indAccTax;
-      taxCombinedNet += taxes.netPay;
+      taxCombinedNet += taxes.netPay + g.adjustment;
     });
 
     const uniqueCount = Object.keys(grouped).length;
@@ -1243,7 +1270,7 @@
         }
 
         const totalDeduct = splitSpecial + splitIndAcc + splitIncome + splitLocal;
-        const netPay = item.grossPay - totalDeduct;
+        const netPay = item.grossPay - totalDeduct + adjustmentNet(item);
 
         splitRows.push({
           school: item.school,
@@ -1263,6 +1290,8 @@
           splitSpecial,
           splitIndAcc,
           totalDeduct,
+          prevAddition: Number(item.prevAddition) || 0,
+          prevDeduction: Number(item.prevDeduction) || 0,
           netPay
         });
       });
@@ -1274,12 +1303,12 @@
       return (a.name || '').localeCompare(b.name || '', 'ko');
     });
 
-    let csv = '\uFEFF귀속연월,근무학교,구분,과목명(역할),강사명,주민등록번호,입금은행,은행코드,계좌번호,기준수수료(단가),재료비,차시(일수),학교별지급계(세전),안분_소득세(3%),안분_주민세(0.3%),안분_특고고용,안분_산재보험,학교별공제계,학교별실입금액(세후)\n';
+    let csv = '\uFEFF귀속연월,근무학교,구분,과목명(역할),강사명,주민등록번호,입금은행,은행코드,계좌번호,기준수수료(단가),재료비,차시(일수),학교별지급계(세전),안분_소득세(3%),안분_주민세(0.3%),안분_특고고용,안분_산재보험,학교별공제계,전월추가분,전월차감분,학교별실입금액(세후)\n';
 
     splitRows.forEach(r => {
       const rrnStr = r.rrn ? `\t${r.rrn}` : '';
       const accStr = r.accountNumber ? `\t${r.accountNumber}` : '';
-      csv += `${activeMonth},${r.school},${r.category},${r.subject},${r.name},${rrnStr},${r.bankName},${r.bankCode},${accStr},${r.baseRate},${r.material},${r.lessons},${r.grossPay},${r.splitIncome},${r.splitLocal},${r.splitSpecial},${r.splitIndAcc},${r.totalDeduct},${r.netPay}\n`;
+      csv += `${activeMonth},${r.school},${r.category},${r.subject},${r.name},${rrnStr},${r.bankName},${r.bankCode},${accStr},${r.baseRate},${r.material},${r.lessons},${r.grossPay},${r.splitIncome},${r.splitLocal},${r.splitSpecial},${r.splitIndAcc},${r.totalDeduct},${r.prevAddition},${r.prevDeduction},${r.netPay}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1314,7 +1343,9 @@
           categories: [],
           subjects: [],
           totalGross: 0,
-          totalMaterial: 0
+          totalMaterial: 0,
+          prevAddition: 0,
+          prevDeduction: 0
         };
       }
       if (!grouped[key].rrn && r.rrn) grouped[key].rrn = r.rrn;
@@ -1328,11 +1359,13 @@
 
       grouped[key].totalGross += (r.grossPay || 0);
       grouped[key].totalMaterial += (r.material || 0);
+      grouped[key].prevAddition += (Number(r.prevAddition) || 0);
+      grouped[key].prevDeduction += (Number(r.prevDeduction) || 0);
     });
 
     const list = Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 
-    let csv = '\uFEFF귀속연월,강사명,주민등록번호(13자리),은행명,은행코드,계좌번호,근무학교목록,구분,과목명,총지급액(세전),재료비(비과세),과세대상소득,경비율공제후(80.7%),특고고용보험,산재보험료,사업소득세(3%),지방소득세(0.3%),총공제세액,차인지급액(실수령액)\n';
+    let csv = '\uFEFF귀속연월,강사명,주민등록번호(13자리),은행명,은행코드,계좌번호,근무학교목록,구분,과목명,총지급액(세전),재료비(비과세),과세대상소득,경비율공제후(80.7%),특고고용보험,산재보험료,사업소득세(3%),지방소득세(0.3%),총공제세액,전월추가분,전월차감분,차인지급액(실수령액)\n';
 
     list.forEach(g => {
       const gross = g.totalGross;
@@ -1348,7 +1381,7 @@
       const rrnStr = g.rrn ? `\t${g.rrn}` : '';
       const accStr = g.accountNumber ? `\t${g.accountNumber}` : '';
 
-      csv += `${activeMonth},${g.name},${rrnStr},${g.bankName},${g.bankCode},${accStr},${schoolStr},${catStr},${subjStr},${gross},${mat},${taxable},${taxes.stdPay},${taxes.specialTax},${taxes.indAccTax},${taxes.incomeTax},${taxes.localTax},${totalDeduct},${taxes.netPay}\n`;
+      csv += `${activeMonth},${g.name},${rrnStr},${g.bankName},${g.bankCode},${accStr},${schoolStr},${catStr},${subjStr},${gross},${mat},${taxable},${taxes.stdPay},${taxes.specialTax},${taxes.indAccTax},${taxes.incomeTax},${taxes.localTax},${totalDeduct},${g.prevAddition},${g.prevDeduction},${taxes.netPay + g.prevAddition - g.prevDeduction}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1386,6 +1419,8 @@
         baseRate: r.baseRate || 0,
         counts: r.counts || {},
         grossPay: r.grossPay,
+        prevAddition: Number(r.prevAddition) || 0,
+        prevDeduction: Number(r.prevDeduction) || 0,
         stdPay: r.stdPay,
         specialTax: r.specialTax,
         indAccTax: r.indAccTax,
@@ -1426,11 +1461,11 @@
       return (a.name || '').localeCompare(b.name || '', 'ko');
     });
 
-    let csv = '\uFEFF근무처,구분,과목명,성명,주민등록번호,은행명,은행코드,계좌번호,기준수수료,재료비,수업차시(일수),지급계,경비율제외,특고료,산재보험료,소득세,주민세,실지급액\n';
+    let csv = '\uFEFF근무처,구분,과목명,성명,주민등록번호,은행명,은행코드,계좌번호,기준수수료,재료비,수업차시(일수),지급계,전월추가분,전월차감분,경비율제외,특고료,산재보험료,소득세,주민세,실지급액\n';
     sorted.forEach(r => {
       const rrnStr = (r.rrn || r.birth) ? `\t${r.rrn || r.birth}` : '';
       const accStr = r.accountNumber ? `\t${r.accountNumber}` : '';
-      csv += `${r.school},${r.category || '방과후'},${r.subject},${r.name},${rrnStr},${r.bankName || ''},${r.bankCode || ''},${accStr},${r.baseRate || 0},${r.material},${r.lessons},${r.grossPay},${r.stdPay},${r.specialTax},${r.indAccTax},${r.incomeTax},${r.localTax},${r.netPay}\n`;
+      csv += `${r.school},${r.category || '방과후'},${r.subject},${r.name},${rrnStr},${r.bankName || ''},${r.bankCode || ''},${accStr},${r.baseRate || 0},${r.material},${r.lessons},${r.grossPay},${Number(r.prevAddition)||0},${Number(r.prevDeduction)||0},${r.stdPay},${r.specialTax},${r.indAccTax},${r.incomeTax},${r.localTax},${r.netPay}\n`;
     });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
