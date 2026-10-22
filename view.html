@@ -363,6 +363,12 @@
     populateMonths();
   };
 
+  function paymentMonthLabel(accrualMonth) {
+    const [year, month] = accrualMonth.split('-').map(Number);
+    const payDate = new Date(year, month, 1);
+    return `${payDate.getFullYear()}년 ${payDate.getMonth() + 1}월 지급 (${month}월 귀속)`;
+  }
+
   function populateMonths() {
     const select = document.getElementById('monthInput');
     const previous = select.value;
@@ -372,7 +378,7 @@
     months.forEach(month => {
       const option = document.createElement('option');
       option.value = month;
-      option.textContent = month.replace('-', '년 ') + '월';
+      option.textContent = paymentMonthLabel(month);
       select.appendChild(option);
     });
     if (months.includes(previous)) select.value = previous;
@@ -422,7 +428,7 @@
     const badge = document.getElementById('badgeCategory');
     badge.innerText = isMulti ? `통합 정산 (${list.length}곳 근무)` : fullCategoryName;
 
-    document.getElementById('subTitleMonth').innerText = `${d.month || ''} 귀속 정산`;
+    document.getElementById('subTitleMonth').innerText = d.month ? paymentMonthLabel(d.month) : '급여 지급명세서';
     
     // 1. 첫째 줄: 성명 / 주민번호 (앞 6자리만 안전 표출)
     document.getElementById('infoName').innerText = d.name || '-';
