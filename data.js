@@ -5748,19 +5748,19 @@ window.PAYROLL_PUBLIC_DATA = [
     "baseRate": 37000,
     "counts": {
       "c2": 1,
-      "c6": 2,
+      "c6": 1,
       "c7": 4,
-      "c8": 13
+      "c8": 14
     },
-    "grossPay": 450060,
+    "grossPay": 456220,
     "prevAddition": 0,
-    "prevDeduction": 52400,
-    "stdPay": 320912,
+    "prevDeduction": 33900,
+    "stdPay": 340812,
     "specialTax": 0,
-    "indAccTax": 1050,
-    "incomeTax": 11920,
-    "localTax": 1190,
-    "netPay": 383500
+    "indAccTax": 1120,
+    "incomeTax": 12660,
+    "localTax": 1260,
+    "netPay": 407280
   },
   {
     "school": "연학초",
