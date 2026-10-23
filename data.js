@@ -7165,21 +7165,21 @@ window.PAYROLL_PUBLIC_DATA = [
     "name": "김유경",
     "birth": "760417",
     "bankName": "국민은행",
-    "material": 0,
+    "material": 378000,
     "lessons": "4",
     "baseRate": 24100,
     "counts": {
       "w4": 27
     },
-    "grossPay": 650700,
+    "grossPay": 1028700,
     "prevAddition": 0,
     "prevDeduction": 0,
-    "stdPay": 525115,
-    "specialTax": 0,
-    "indAccTax": 1730,
-    "incomeTax": 19520,
-    "localTax": 1950,
-    "netPay": 627500
+    "stdPay": 830161,
+    "specialTax": 10640,
+    "indAccTax": 2730,
+    "incomeTax": 30860,
+    "localTax": 3080,
+    "netPay": 981390
   },
   {
     "school": "창신초",
@@ -7546,21 +7546,21 @@ window.PAYROLL_PUBLIC_DATA = [
     "name": "허윤주",
     "birth": "821204",
     "bankName": "전북은행",
-    "material": 0,
+    "material": 288000,
     "lessons": "4",
     "baseRate": 24100,
     "counts": {
       "w4": 24
     },
-    "grossPay": 578400,
+    "grossPay": 866400,
     "prevAddition": 0,
     "prevDeduction": 0,
-    "stdPay": 466769,
+    "stdPay": 699185,
     "specialTax": 0,
-    "indAccTax": 1540,
-    "incomeTax": 17350,
-    "localTax": 1730,
-    "netPay": 557780
+    "indAccTax": 2300,
+    "incomeTax": 25990,
+    "localTax": 2590,
+    "netPay": 835520
   },
   {
     "school": "창영초",
